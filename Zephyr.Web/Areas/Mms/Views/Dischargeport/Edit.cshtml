@@ -1,0 +1,199 @@
+﻿@{
+    ViewBag.Title = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section scripts{
+        <script src="~/Areas/Mms/ViewModels/mms.com.js"></script>
+        <script src="~/Areas/Mms/ViewModels/mms.viewModel.edit.js"></script>
+<script type="text/javascript" src="~/Content/arcgis/jsapi_vsdoc12_v38.js"></script>
+<link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/dijit/themes/tundra/tundra.css" />
+<link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/esri/css/esri.css" />
+<script type="text/javascript"
+        src="http://10.144.1.21/arcgis/library/3.17/jsapi/init.js"></script>
+        <script type="text/javascript">
+            var viewModel = function (data) {
+                var self = this;
+                mms.viewModel.edit.apply(this, arguments);
+            };
+            var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+            ko.bindingViewModel(new viewModel(data));
+
+            var sms;
+            var infoTemplate;
+            var MyMap;
+            var graphic;
+            var MyTiledMapServiceLayer;
+            showmap();
+
+            function showmap()
+            {
+         
+                dojo.require("esri.map");
+                require([
+                            "dojo/dom", "dojo/on",
+                            "esri/map", "esri/layers/GraphicsLayer", "esri/geometry/Point","esri/symbols/SimpleMarkerSymbol", "esri/symbols/PictureMarkerSymbol",
+                            "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/Color", "esri/InfoTemplate","esri/SpatialReference", 
+                            "dojo/domReady!"],
+                        function (dom, on, Map, GraphicsLayer, Point,
+                                  SimpleMarkerSymbol,  PictureMarkerSymbol, SimpleLineSymbol,Graphic, Color) {
+                            //var MyTiledMapServiceLayer = new esri.layers.ArcGISTiledMapServiceLayer ("http://www.arcgisonline.cn/ArcGIS/rest/services/ChinaOnlineCommunity/MapServer");
+                    
+                             MyTiledMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州底图1124/MapServer");
+                            MyMapDiv.innerHTML="";
+                            MyMap  = new esri.Map("MyMapDiv",  {extent: new esri.geometry.Extent({xmin:502975.0245478001,ymin:3789483.8053802885,xmax:538055.4814522,ymax:3803447.8707500007,spatialReference:{wkid:2436}})
+                            });
+                            MyMap.addLayer(MyTiledMapServiceLayer);
+                            graphicsLayer = new GraphicsLayer();
+                            //sms = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 20,
+                            //              new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,
+                            //                      new Color([255, 0, 0]), 1),
+                            //              new Color([0, 255, 0, 0.25]));
+
+
+                            sms =  new PictureMarkerSymbol({
+                                "url":"/images/Dischargeport.png",
+                                "height":15,
+                                "width":15,
+                                "type":"esriPMS",
+                                "angle": -30,
+                                "color": [255,255,255,64]
+                            });
+                 
+                        infoTemplate = new esri.InfoTemplate();
+             
+                            var Category = utils.CovValueToText(data.form.Category,data.dataSource.Category);
+                            var Form = utils.CovValueToText(data.form.Form,data.dataSource.Form);
+                            var AdministrativeArea = utils.CovValueToText(data.form.AdministrativeArea,data.dataSource.AdministrativeArea);
+                            var FilmDoorMaterial = utils.CovValueToText(data.form.FilmDoorMaterial,data.dataSource.FilmDoorMaterial);
+                            var FilmDoor = utils.CovValueToText(data.form.FilmDoor,data.dataSource.FilmDoor);
+                            var FacilityStatus = utils.CovValueToText(data.form.FacilityStatus,data.dataSource.FacilityStatus);
+                            var Size=data.form.Size;
+                            var FilmDoorDiameter=data.form.FilmDoorDiameter;
+                            var FilmDoorToopElevation=data.form.FilmDoorToopElevation;
+                            var FilmDoorBottomElevation=data.form.FilmDoorBottomElevation;
+                            var SubmergedWaterLevel=data.form.SubmergedWaterLevel;
+                            var BottomElevation=data.form.BottomElevation;
+                            var IdentificationCode=data.form.IdentificationCode;
+                            var Address=data.form.Address;
+
+                            var point = new Point(data.form.OrgY, data.form.OrgX);
+                            var attr = {"Category":Category,"Address":Address,"Form":Form,"AdministrativeArea":AdministrativeArea,"FilmDoorMaterial":FilmDoorMaterial,"FilmDoor":FilmDoor,"FacilityStatus":FacilityStatus,
+                                "Size":Size,"FilmDoorDiameter":FilmDoorDiameter,"FilmDoorToopElevation":FilmDoorToopElevation,"FilmDoorBottomElevation":FilmDoorBottomElevation,"SubmergedWaterLevel":SubmergedWaterLevel,"BottomElevation":BottomElevation,
+                            
+                                "IdentificationCode":IdentificationCode };
+
+                            var content = "<b>排放口类别:</b>&nbsp${Category}&nbsp&nbsp<br>"
+                                                + "<b>排放口地址:</b>&nbsp${Address}&nbsp&nbsp<br>"
+                                                + "<b>出流形式:</b>&nbsp${Form}&nbsp&nbsp<br>"
+                                                + "<b>是否有拍门:</b>&nbsp${FilmDoor}&nbsp&nbsp<br>"
+                                                + "<b>排放口尺寸(米):</b>&nbsp${Size}&nbsp&nbsp<br>"
+                                                + "<b>底部高程(米):</b>&nbsp${BottomElevation}&nbsp&nbsp<br>"
+                                                + "<b>设施状态:</b>&nbsp${FacilityStatus}&nbsp&nbsp<br>"
+                                        
+                            infoTemplate.setTitle("排放口编号:"+"${IdentificationCode}");
+                            infoTemplate.setContent(content);
+                            graphic = new esri.Graphic(point, sms, attr, infoTemplate);
+                            graphicsLayer.add(graphic);
+                         
+                            MyMap.resize();
+                            MyMap.addLayer(graphicsLayer);
+                            MyMap.centerAt(new Point(data.form.OrgY, data.form.OrgX),graphicsLayer);  
+                      }
+                 )
+            }
+
+
+        </script>
+}
+
+    <div class="z-toolbar">
+        <a id="a_save" href="#" plain="true" class="easyui-linkbutton" icon="icon-save" data-bind="click:saveClick,linkbuttonDisable:readonly" title="保存">保存</a>
+        <a id="a_undo" href="#" plain="true" class="easyui-linkbutton" icon="icon-undo" data-bind="click:rejectClick,linkbuttonDisable:readonly" title="撤消">撤消</a>
+        <a id="a_audit" href="#" plain="true" class="easyui-linkbutton" icon="icon-user-accept" data-bind="click:auditClick,easyuiLinkbutton:approveButton"  title="审核">审核</a>
+        <a id="a_printer" href="#" plain="true" class="easyui-linkbutton" icon="icon-printer" title="打印" data-bind="click:printClick">打印</a>
+        <div class="datagrid-btn-separator"></div>
+        <a id="a_other" href="#" class="easyui-splitbutton" data-options="menu:'#divother',iconCls:'icon-application_go'" title="其他">其他</a>
+        <div class="datagrid-btn-separator"></div>
+        <a id="a_first" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_first" data-bind="click:firstClick,linkbuttonEnable:scrollKeys.firstEnable" title="第一条"></a> 
+        <a id="a_previous" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_previous" data-bind="click:previousClick,linkbuttonEnable:scrollKeys.previousEnable" title="上一条"></a> 
+        <a id="a_next" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_next" data-bind="click:nextClick,linkbuttonEnable:scrollKeys.nextEnable" title="下一条"></a> 
+        <a id="a_last" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_last" data-bind="click:lastClick,linkbuttonEnable:scrollKeys.lastEnable" title="最后一条"></a> 
+    </div>
+
+ 
+
+    <div id="master" class="container_12" data-bind="inputwidth:0.9">
+    <div class="grid_1 lbl">信息编号</div>
+    <div class="grid_3 val"><input type="text" id="BillNo" name="BillNo" data-bind="value:form.BillNo,readOnly:true" class="z-txt readonly" /></div>
+    <div class="grid_1 lbl">排放口地址</div>
+    <div class="grid_3 val"><input type="text" id="Address" name="Address" data-bind="value:form.Address" class="z-txt " /></div>
+    <div class="grid_1 lbl">所在区域</div>
+    <div class="grid_3 val "><input type="text" data-bind="comboboxValue:form.AdministrativeArea,datasource:dataSource.AdministrativeArea,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl">排放口类别</div>
+    <div class="grid_3 val"><input type="text" data-bind="comboboxValue:form.Category,datasource:dataSource.Category,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">是否有拍门</div>
+    <div class="grid_3 val"><input type="text" data-bind="comboboxValue:form.FilmDoor,datasource:dataSource.FilmDoor,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">出流形式</div>
+    <div class="grid_3 val"><input type="text" data-bind="comboboxValue:form.Form,datasource:dataSource.Form,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl ">拍门材质</div>
+    <div class="grid_3 val"><input type="text" data-bind="comboboxValue:form.FilmDoorMaterial,datasource:dataSource.FilmDoorMaterial,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">排放口尺寸(米)</div>
+    <div class="grid_3 val"><input type="text" id="Size" name="Size" data-bind="value:form.Size" class="z-txt" /></div>
+    <div class="grid_1 lbl">拍门直径(米)</div>
+    <div class="grid_3 val "><input type="text" id="FilmDoorDiameter" name="FilmDoorDiameter" data-bind="value:form.FilmDoorDiameter" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+
+    <div class="grid_1 lbl">拍门顶部高程(米)</div>
+    <div class="grid_3 val"><input type="text" id="FilmDoorToopElevation" name="FilmDoorToopElevation" data-bind="value:form.FilmDoorToopElevation" class="z-txt" /></div>
+    <div class="grid_1 lbl">拍门底部高程(米)</div>
+    <div class="grid_3 val"><input type="text" id="FilmDoorBottomElevation" name="FilmDoorBottomElevation" data-bind="value:form.FilmDoorBottomElevation" class="z-txt" /></div>
+    <div class="grid_1 lbl">淹没常水位(米)</div>
+    <div class="grid_3 val "><input type="text" id="SubmergedWaterLevel" name="SubmergedWaterLevel" data-bind="value:form.SubmergedWaterLevel" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+
+    <div class="grid_1 lbl">井室宽度(米)</div>
+    <div class="grid_3 val"><input type="text" id="WellWidth" name="WellWidth" data-bind="value:form.WellWidth" class="z-txt" /></div>
+    <div class="grid_1 lbl">井室直径(米)</div>
+    <div class="grid_3 val"><input type="text" id="WellDiameter" name="WellDiameter" data-bind="value:form.WellDiameter" class="z-txt" /></div>
+    <div class="grid_1 lbl">井室高度(米)</div>
+    <div class="grid_3 val "><input type="text" id="WellHeight" name="WellHeight" data-bind="value:form.WellHeight" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl ">潮位曲线</div>
+    <div class="grid_3 val"><input type="text" id="TideCurve" name="TideCurve" data-bind="value:form.TideCurve" class="z-txt" /></div>
+    <div class="grid_1 lbl">底部高程(米)</div>
+    <div class="grid_3 val"><input type="text" id="BottomElevation" name="BottomElevation" data-bind="value:form.BottomElevation" class="z-txt" /></div>
+    @*<div class="grid_1 lbl">井底形式</div>
+        <div class="grid_3 val "><input type="text" data-bind="comboboxValue:form.BottomType,datasource:dataSource.BottomType,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>*@
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl">设施状态</div>
+    <div class="grid_3 val"><input type="text" data-bind="comboboxValue:form.FacilityStatus,datasource:dataSource.FacilityStatus,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">经度</div>
+    <div class="grid_3 val"><input type="text" id="OrgY" name="OrgY" data-bind="value:form.OrgY" class="z-txt" /></div>
+    <div class="grid_1 lbl">纬度</div>
+    <div class="grid_3 val "><input type="text" id="OrgX" name="OrgX" data-bind="value:form.OrgX" class="z-txt" /></div>
+
+    <div class="clear"></div>
+</div>
+<div title="地图查看" id="mapwin">
+
+    <div id="MyMapDiv" class="MapClass" style="height: 800px"></div>
+
+</div>
+

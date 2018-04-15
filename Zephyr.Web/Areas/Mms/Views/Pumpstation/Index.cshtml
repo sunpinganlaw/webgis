@@ -1,0 +1,434 @@
+﻿@{
+    ViewBag.Title = "title";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var Cols = new Zephyr.Models.sys_roleMenuColumnMapService().GetCurrentUserMenuColumns();
+}
+
+@section scripts{
+
+    <script src="~/Areas/Mms/ViewModels/mms.com.js"></script>
+    <script src="~/Areas/Mms/ViewModels/mms.viewModel.search.js"></script>
+    <script type="text/javascript" src="~/Content/arcgis/jsapi_vsdoc12_v38.js"></script>
+    <link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/dijit/themes/tundra/tundra.css" />
+    <link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/esri/css/esri.css" />
+    <script type="text/javascript"
+        src="http://10.144.1.21/arcgis/library/3.17/jsapi/init.js"></script>
+    <script type="text/javascript">
+
+
+        var MyMap;
+     
+        var MyBuildMapServiceLayer; 
+        var MyRiverMapServiceLayer; 
+        var MyRoadMapServiceLayer; 
+        var graphicsLayer;
+        var sms;
+        var infoTemplate;
+        var graphic;
+        var selecteditem=0
+        var selecteditem1=0
+        var selecteditem2=0;
+        var selecteditem3=0;
+        var selecteditem4=0;
+        var selecteditem5=0;
+        var selecteditem6=0;
+       
+        var lastid='0';
+        var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+        var viewModel = function(){
+            var self = this;
+            mms.viewModel.search.apply(this,arguments);
+            com.Category = utils.fnValueToText(data.dataSource.Category);
+            com.AdministrativeArea = utils.fnValueToText(data.dataSource.AdministrativeArea);
+            com.FacilityStatus = utils.fnValueToText(data.dataSource.FacilityStatus);
+
+        }
+        ko.bindingViewModel(new viewModel(data));
+      
+     
+      function adds(rows)
+      {
+          
+        dojo.require("esri.map");
+        require([
+                    "dojo/dom", "dojo/on",
+                    "esri/map", "esri/layers/GraphicsLayer", "esri/geometry/Point","esri/symbols/SimpleMarkerSymbol", "esri/symbols/PictureMarkerSymbol",
+                    "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/Color", "esri/InfoTemplate","esri/SpatialReference", 
+                    "dojo/domReady!"],
+                function (dom, on, Map, GraphicsLayer, Point,
+                          SimpleMarkerSymbol,  PictureMarkerSymbol, SimpleLineSymbol,Graphic, Color) {
+                    //var MyTiledMapServiceLayer = new esri.layers.ArcGISTiledMapServiceLayer ("http://www.arcgisonline.cn/ArcGIS/rest/services/ChinaOnlineCommunity/MapServer");
+                    
+                    MyBuildMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州底图1124/MapServer");
+                    MyRiverMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/rivermap/MapServer");
+                    MyRoadMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/roadmap/MapServer");
+                    MyContourMapServiceLayer= new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/mapdenggaoxian/MapServer");
+                    MyCalloutMapServiceLayer= new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/标注图层/MapServer");
+                    MyAdministrativeMapServiceLayer= new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州市行政区域/MapServer");
+                   
+                    MyMapDiv.innerHTML="";
+                    MyMap  = new esri.Map("MyMapDiv");
+             
+                    if(selecteditem1==1)
+                    {
+                        MyMap.addLayer(MyBuildMapServiceLayer);
+                    }
+              
+                    if(selecteditem2==2)
+                    {
+                        MyMap.addLayer(MyRiverMapServiceLayer);
+                    }
+                    if(selecteditem3==3)
+                    {
+                        MyMap.addLayer(MyRoadMapServiceLayer);
+                    }
+                    if(selecteditem4==4)
+                    {
+                        MyMap.addLayer(MyContourMapServiceLayer);
+                    }
+                    if(selecteditem5==5)
+                    {
+                        MyMap.addLayer(MyCalloutMapServiceLayer);
+                    }
+                    if(selecteditem6==6)
+                    {
+                        MyMap.addLayer(MyAdministrativeMapServiceLayer);
+                    }
+
+                    graphicsLayer = new GraphicsLayer();
+                    //sms = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 20,
+                    //              new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,
+                    //                      new Color([255, 0, 0]), 1),
+                    //              new Color([0, 255, 0, 0.25]));
+
+
+                     sms =  new PictureMarkerSymbol({
+                         "url":"/images/Pumpstation.png",
+                        "height":15,
+                        "width":15,
+                        "type":"esriPMS",
+                        "angle": -30,
+                        "color": [255,255,255,64]
+                    });
+                 
+                    infoTemplate = new esri.InfoTemplate();
+                    for (var i = 0; i < rows.length; i++) {
+
+
+                        var Category = utils.CovValueToText(rows[i]['Category'],data.dataSource.Category);
+                        var AdministrativeArea = utils.CovValueToText(rows[i]['AdministrativeArea'],data.dataSource.AdministrativeArea);
+                        var FacilityStatus = utils.CovValueToText(rows[i]['FacilityStatus'],data.dataSource.FacilityStatus);
+
+                        var IdentificationCode=rows[i]['IdentificationCode'];
+                        var Name=rows[i]['Name'];
+                        var PumpNumber=rows[i]['PumpNumber'];
+                        var RainwaterCapacity=rows[i]['RainwaterCapacity'];
+                        var SewageCapacity=rows[i]['SewageCapacity'];
+                        var MinimumWaterLevel=rows[i]['MinimumWaterLevel'];
+                        var NurmalWaterLevel=rows[i]['NurmalWaterLevel'];
+                        var AlarmWaterLevel=rows[i]['AlarmWaterLevel'];
+                        var AreaCovered=rows[i]['AreaCovered'];
+                        var ServiceScope=rows[i]['ServiceScope'];
+                        var ServiceArea=rows[i]['ServiceArea'];
+                        var RainwaterCapacityNow=rows[i]['RainwaterCapacityNow'];
+                        var SewageCapacityNow=rows[i]['SewageCapacityNow'];
+                        var StormPeriod=rows[i]['StormPeriod'];
+                        var PowerSupply=rows[i]['PowerSupply'];
+                        var InstalledCapacity=rows[i]['InstalledCapacity'];
+
+                        var DischargeCode=rows[i]['DischargeCode'];
+                        var FrontPoolLength=rows[i]['FrontPoolLength'];
+                        var FrontPoolWidth=rows[i]['FrontPoolWidth'];
+                        var FrontPoolDepth=rows[i]['FrontPoolDepth'];
+
+                        var point = new Point(rows[i]['OrgY'], rows[i]['OrgX']);
+                        var attr = {"Category":Category,"AdministrativeArea":AdministrativeArea,"Name":Name,"PumpNumber":PumpNumber,"RainwaterCapacity":RainwaterCapacity,
+                            "SewageCapacity":SewageCapacity,"MinimumWaterLevel":MinimumWaterLevel,"NurmalWaterLevel":NurmalWaterLevel,"AlarmWaterLevel":AlarmWaterLevel,"AreaCovered":AreaCovered,"ServiceScope":ServiceScope,
+                            
+                            "ServiceArea":ServiceArea,"RainwaterCapacityNow":RainwaterCapacityNow,"SewageCapacityNow":SewageCapacityNow,"StormPeriod":StormPeriod,"PowerSupply":PowerSupply,"InstalledCapacity":InstalledCapacity,
+                            "DischargeCode":DischargeCode,"FrontPoolLength":FrontPoolLength,"FrontPoolWidth":FrontPoolWidth,"FrontPoolDepth":FrontPoolDepth,"IdentificationCode":IdentificationCode };
+
+                            var content = "<b>泵站类别:</b>&nbsp${Category}&nbsp&nbsp<br>"
+                                         + "<b>泵站名称:</b>&nbsp${Name}&nbsp&nbsp<br>"
+                                         + "<b>水泵台数:</b>&nbsp${PumpNumber}&nbsp&nbsp<br>"
+                                         + "<b>设计排水能力(m³/s):</b>&nbsp${RainwaterCapacity}&nbsp&nbsp<br>"
+                                         + "<b>控制水位(米):</b>&nbsp${NurmalWaterLevel}&nbsp&nbsp<br>"
+                                         + "<b>服务范围:</b>&nbsp${ServiceScope}&nbsp&nbsp<br>"
+                                         + "<b>装机容量:</b>&nbsp${InstalledCapacity}&nbsp&nbsp<br>"
+                                         + "<b>前池深(米):</b>&nbsp${FrontPoolDepth}&nbsp&nbsp<br>"
+                            infoTemplate.setTitle("泵站编号:"+"${IdentificationCode}");
+                            infoTemplate.setContent(content);
+                            graphic = new esri.Graphic(point, sms, attr, infoTemplate);
+                            graphicsLayer.add(graphic);
+                        }
+                        MyMap.resize();
+                        MyMap.addLayer(graphicsLayer);
+                        MyMap.centerAt(new Point(rows[rows.length-1]['OrgY'], rows[rows.length-1]['OrgX']));  
+                }
+         )
+        }
+
+
+        function doFind() {
+            var rows = $("#tbgrid").datagrid("getRows");
+            var pp = $('#testss').tabs('getSelected');
+            if(pp.panel('options').title!="地图查看")
+            {
+                $('#mapCheckbox').hide();
+
+            }else
+            {
+                $('#mapCheckbox').show();
+                if(lastid!=rows[rows.length-1]['BillNo'])
+                {
+                    lastid=rows[rows.length-1]['BillNo'];
+                    adds(rows);
+
+                }else{
+
+                    return;
+                }
+
+            }
+
+        }
+
+
+        //function doCount() {
+
+        //    this.form = ko.mapping.fromJS(data.form);
+        //    var param = ko.toJS(this.form);
+        //    //alert(param);
+        //    //alert("sss");
+        //    $('#countgrid').datagrid({
+        //        title: 'DataGrid - ContextMenu',
+        //        url:'/api/mms/inspectionwell',
+        //        contentType: "application/json",
+              
+        //        width: 700,
+        //        method: 'get',
+        //        height: 'auto'
+             
+            
+        //    });
+        
+        //    $('#countgrid').datagrid('load');
+        //}
+
+
+
+
+        function test(val)
+        {
+           
+
+            alert(utils.CovValueToText(val,data.dataSource.Category));
+          
+        }
+        $('#mapCheckbox').hide();
+
+
+
+        $('#btn').bind('click', function(){
+          
+            if ($('#item1').attr('checked')) 
+            {  
+                selecteditem1=$('input[name="item1"]:checked').val();
+
+            }else{
+
+                selecteditem1=0;
+            }
+
+            if ($('#item2').attr('checked')) 
+            {  
+                selecteditem2=$('input[name="item2"]:checked').val();
+
+            }else{
+
+                selecteditem2=0;
+            }
+
+            if ($('#item3').attr('checked')) 
+            {  
+                selecteditem3=$('input[name="item3"]:checked').val();
+
+            }else{
+
+                selecteditem3=0;
+            }
+
+            if ($('#item4').attr('checked')) 
+            {  
+                selecteditem4=$('input[name="item4"]:checked').val();
+
+            }else{
+
+                selecteditem4=0;
+            }
+            
+            if ($('#item5').attr('checked')) 
+            {  
+                selecteditem5=$('input[name="item5"]:checked').val();
+
+            }else{
+
+                selecteditem5=0;
+            }
+            if ($('#item6').attr('checked')) 
+            {  
+                selecteditem6=$('input[name="item6"]:checked').val();
+
+            }else{
+
+                selecteditem6=0;
+            }
+          
+            MyMapDiv.innerHTML="";
+            var rows = $("#tbgrid").datagrid("getRows");
+            adds(rows);
+              
+           
+
+           
+            
+        });
+
+
+        // 初始化图表标签
+        var myChart = echarts.init(document.getElementById('chart'));
+        $(function () {
+           
+            $.ajax({
+                url: "/mms/pumpstation/Echart/Category",
+                success: function (data) {
+                    var options=data;
+                    myChart.setOption(options);
+                },
+                async: false
+            });
+
+        });
+
+        // 初始化图表标签
+        var myCharts = echarts.init(document.getElementById('charts'));
+        $(function () {
+           
+            $.ajax({
+                url: "/mms/pumpstation/Echart/AdministrativeArea",
+                success: function (data) {
+                    var options=data;
+                    myCharts.setOption(options);
+                },
+                async: false
+            });
+
+        });
+       
+
+
+    </script>
+}
+
+@Html.RenderToolbar()
+
+
+
+<div id="condition" class="container_12" style="position:relative;">
+    <div class="grid_1 lbl">泵站标识码</div>
+    <div class="grid_2 val"><input type="text" data-bind="value:form.IdentificationCode" class="z-txt" /></div>
+    <div class="grid_1 lbl">所在道路名称</div>
+    <div class="grid_2 val"><input type="text" data-bind="value:form.Address" class="z-txt" /></div>
+    <div class="grid_1 lbl">所在区域</div>
+    <div class="grid_2 val"><input type="text" data-bind="comboboxValue:form.AdministrativeArea,datasource:dataSource.AdministrativeArea" class="easyui-combobox z-txt" data-options="showblank:true" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl">泵站类型</div>
+    <div class="grid_2 val"><input type="text" data-bind="comboboxValue:form.Category,datasource:dataSource.Category" class="easyui-combobox z-txt" data-options="showblank:true" /></div>
+    <div class="grid_1 lbl">泵站名称</div>
+    <div class="grid_2 val"><input type="text" data-bind="value:form.Name" class="z-txt" /></div>
+    @*<div class="grid_1 lbl">检查井形式</div>
+    <div class="grid_2 val"><input type="text" data-bind="comboboxValue:form.Form,datasource:dataSource.Form" class="easyui-combobox z-txt" data-options="showblank:true" /></div>*@
+
+    <div class="clear"></div>
+
+    <div class="prefix_9" style="position:absolute;top:5px;height:0;">
+        <a id="a_search" href="#" class="buttonHuge button-blue" data-bind="click:searchClick" style="margin:0 15px;">查询</a>
+        <a id="a_reset" href="#" class="buttonHuge button-blue" data-bind="click:clearClick">清空</a>
+    </div>
+</div>
+
+
+<div id="mapCheckbox">
+    <label>请先选择要加载的底图类型：</label>
+    <input type="checkbox" name="item1" value="1" id="item1" />建筑图层
+    <input type="checkbox" name="item2" value="2" id="item2" />河流图层
+    <input type="checkbox" name="item3" value="3" id="item3" />道路图层
+    <input type="checkbox" name="item4" value="4" id="item4" />等高线图层
+    <input type="checkbox" name="item5" value="5" id="item5" />标注图层
+    <input type="checkbox" name="item6" value="6" id="item6" />行政区图层
+    <a id="btn" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-save'">确 认</a>
+</div>
+
+
+
+<div id="testss" class="easyui-tabs" data-bind="click:doFind">
+    <div title="详细信息">
+        <div style="position: absolute; height: 100%; overflow-y:auto ;overflow-x:hidden">
+            <table id="tbgrid" data-bind="datagrid:grid" style="scrollbar-darkshadow-color: #f00; height: 100%">
+                <thead>
+                    <tr>
+                        <th field="BillNo" hidden="hidden" sortable="true" align="center" width="90">流水号</th>
+                        <th field="Address" @Html.HideColumn(Cols, "Address") sortable="true" align="center" width="100">所在道路名称</th>
+                        <th field="AdministrativeArea" @Html.HideColumn(Cols, "AdministrativeArea") sortable="true" align="center" width="100" formatter="com.AdministrativeArea">所在区域</th>
+                        <th field="Category" @Html.HideColumn(Cols, "Category") sortable="true" align="center" width="100" formatter="com.Category">泵站类型</th>
+                        <th field="IdentificationCode" @Html.HideColumn(Cols, "IdentificationCode") sortable="true" align="center" width="100">泵站标识码</th>
+                        <th field="Name" @Html.HideColumn(Cols, "Name") sortable="true" align="center" width="100">泵站名称</th>
+                        <th field="PumpNumber" @Html.HideColumn(Cols, "PumpNumber") sortable="true" align="center" width="100">泵台数</th>
+                        <th field="RainwaterCapacity" @Html.HideColumn(Cols, "RainwaterCapacity") sortable="true" align="center" width="100">设计排水能力(立方米/秒)</th>
+                        <th field="SewageCapacity" @Html.HideColumn(Cols, "SewageCapacity") sortable="true" align="center" width="100" >设计排污能力(立方米/秒)</th>
+                        <th field="MinimumWaterLevel" @Html.HideColumn(Cols, "MinimumWaterLevel") sortable="true" align="center" width="100">最低控制水位(米)</th>
+                        <th field="NurmalWaterLevel" @Html.HideColumn(Cols, "NurmalWaterLevel") sortable="true" align="center" width="100">控制水位(米)</th>
+                        <th field="AlarmWaterLevel" @Html.HideColumn(Cols, "AlarmWaterLevel") sortable="true" align="center" width="100">警戒水位(米)</th>
+                        <th field="AreaCovered" @Html.HideColumn(Cols, "AreaCovered") sortable="true" align="center" width="100">占地面积(平方米)</th>
+                        <th field="ServiceScope" @Html.HideColumn(Cols, "ServiceScope") sortable="true" align="center" width="100">服务范围</th>
+                        <th field="ServiceArea" @Html.HideColumn(Cols, "ServiceArea") sortable="true" align="center" width="100">服务面积(公顷)</th>
+                        <th field="RainwaterCapacityNow" @Html.HideColumn(Cols, "RainwaterCapacityNow") sortable="true" align="center" width="100">现有排水能力(立方米/秒)</th>
+                        <th field="SewageCapacityNow" @Html.HideColumn(Cols, "SewageCapacityNow") sortable="true" align="center" width="100">现有排污能力(立方米/秒)</th>
+                        <th field="StormPeriod" @Html.HideColumn(Cols, "StormPeriod") sortable="true" align="center" width="100">暴雨重现期</th>
+                        <th field="PowerSupply" @Html.HideColumn(Cols, "PowerSupply") sortable="true" align="center" width="100" >供电部门</th>
+                        <th field="InstalledCapacity" @Html.HideColumn(Cols, "InstalledCapacity") sortable="true" align="center" width="100">装机容量</th>
+                        <th field="DischargeCode" @Html.HideColumn(Cols, "DischargeCode") sortable="true" align="center" width="100">排放口编码</th>
+                        <th field="FrontPoolLength" @Html.HideColumn(Cols, "FrontPoolLength") sortable="true" align="center" width="100">前池长度(米)</th>
+                        <th field="FrontPoolWidth" @Html.HideColumn(Cols, "FrontPoolWidth") sortable="true" align="center" width="100">前池宽度(米)</th>
+                        <th field="FrontPoolDepth" @Html.HideColumn(Cols, "FrontPoolDepth") sortable="true" align="center" width="100">前池深度(米)</th>
+                        <th field="FacilityStatus" @Html.HideColumn(Cols, "FacilityStatus") sortable="true" align="center" width="100" formatter="com.FacilityStatus">设施状态</th>
+                        <th field="OrgX" hidden="hidden" align="left" width="100">经度</th>
+                        <th field="OrgY" hidden="hidden" align="left" width="100">纬度</th>
+                       
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div title="地图查看" id="mapwin">
+        <div style="height: 100%;width:100%; overflow-y: hidden; overflow-x: hidden">
+            <div id="MyMapDiv" class="MapClass" style="height: 800px"></div>
+        </div>
+    </div>
+
+
+    <div title="统计查看">
+        <div style="position: absolute; height: 100%; overflow-y:auto ;overflow-x:hidden">
+            <div id="chart" style="width:500px;height:500px;  float:left">   </div>
+            <div id="charts" style="width:500px;height:500px; float:right"> </div>
+            @*<div id="chart1" style="width:500px;height:500px; float:left">  </div>*@
+        </div>
+    </div>
+</div>
+
+
+

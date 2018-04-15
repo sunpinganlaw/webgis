@@ -1,0 +1,198 @@
+﻿@{
+    ViewBag.Title = "title";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var Cols = new Zephyr.Models.sys_roleMenuColumnMapService().GetCurrentUserMenuColumns();
+}
+
+@section scripts{
+
+    <script src="~/Areas/Mms/ViewModels/mms.com.js"></script>
+    <script src="~/Areas/Mms/ViewModels/mms.viewModel.search.js"></script>
+    <script type="text/javascript" src="~/Content/arcgis/jsapi_vsdoc12_v38.js"></script>
+    <link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/dijit/themes/tundra/tundra.css" />
+    <link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/esri/css/esri.css" />
+    <script type="text/javascript"
+        src="http://10.144.1.21/arcgis/library/3.17/jsapi/init.js"></script>
+    <script type="text/javascript">
+
+       
+        var lastid='0';
+        var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+        var viewModel = function(){
+            var self = this;
+            mms.viewModel.search.apply(this,arguments);
+            com.AdministrativeArea = utils.fnValueToText(data.dataSource.AdministrativeArea);
+            com.FacilityStatus = utils.fnValueToText(data.dataSource.FacilityStatus);
+            com.Certificate = utils.fnValueToText(data.dataSource.Certificate);
+
+        }
+        ko.bindingViewModel(new viewModel(data));
+      
+     
+      function adds(rows)
+      {
+          var graphicsLayer;
+          var sms;
+          var infoTemplate;
+          var MyMap;
+          var graphic;
+       
+        dojo.require("esri.map");
+        require([
+                    "dojo/dom", "dojo/on",
+                    "esri/map", "esri/layers/GraphicsLayer", "esri/geometry/Point", "esri/symbols/SimpleMarkerSymbol",
+                    "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/Color", "esri/InfoTemplate","esri/SpatialReference",
+                    "dojo/domReady!"],
+                function (dom, on, Map, GraphicsLayer, Point,
+                          SimpleMarkerSymbol, SimpleLineSymbol, Graphic, Color) {
+                    //var MyTiledMapServiceLayer = new esri.layers.ArcGISTiledMapServiceLayer ("http://www.arcgisonline.cn/ArcGIS/rest/services/ChinaOnlineCommunity/MapServer");
+                    
+                    var MyTiledMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州底图1124/MapServer");
+                    MyMapDiv.innerHTML="";
+                    MyMap  = new esri.Map("MyMapDiv");
+                    MyMap.addLayer(MyTiledMapServiceLayer);
+                    graphicsLayer = new GraphicsLayer();
+                    sms = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 20,
+                                  new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,
+                                          new Color([255, 0, 0]), 1),
+                                  new Color([0, 255, 0, 0.25]));
+                    infoTemplate = new esri.InfoTemplate();
+                    for (var i = 0; i < rows.length; i++) {
+
+
+                        var Certificate = utils.CovValueToText(rows[i]['Certificate'],data.dataSource.Certificate);
+                      
+                        var Address=rows[i]['Address'];
+                        var Name=rows[i]['Name'];
+                        var Displacement=rows[i]['Displacement'];
+                        var Type=rows[i]['Type'];
+                        var CertificateyTime=rows[i]['CertificateyTime'];
+                        var Remark=rows[i]['Remark'];
+                      
+
+                        var point = new Point(rows[i]['OrgY'], rows[i]['OrgX']);
+                        var attr = {"Address":Address,"Name":Name,"Displacement":Displacement,"Type":Type,
+                            "Certificate":Certificate,"CertificateyTime":CertificateyTime,"Remark":Remark };
+
+                        var content = "<b>道路名称:</b>&nbsp${Address}&nbsp&nbsp<br>"
+                                         + "<b>单位名称:</b>&nbsp${Name}&nbsp&nbsp<br>"
+                                         + "<b>排水量:</b>&nbsp${Displacement}&nbsp&nbsp<br>"
+                                         + "<b>所属行业:</b>&nbsp${Type}&nbsp&nbsp<br>"
+                                         + "<b>证书是否发放:</b>&nbsp${Certificate}&nbsp&nbsp<br>"
+                                         + "<b>证书有效期:</b>&nbsp${CertificateyTime}&nbsp&nbsp<br>"
+                                         + "<b>备注信息:</b>&nbsp${Remark}&nbsp&nbsp<br>"
+                                        
+                                       
+                            infoTemplate.setTitle("单位名称:"+"${Name}");
+                            infoTemplate.setContent(content);
+                            graphic = new esri.Graphic(point, sms, attr, infoTemplate);
+                            graphicsLayer.add(graphic);
+                        }
+                        MyMap.resize();
+                        MyMap.addLayer(graphicsLayer);
+                        MyMap.centerAt(new Point(rows[rows.length-1]['OrgY'], rows[rows.length-1]['OrgX']));  
+                }
+         )
+        }
+
+
+        function doFind() {
+            var rows = $("#tbgrid").datagrid("getRows");
+            var pp = $('#testss').tabs('getSelected');
+            if(pp.panel('options').title!="地图查看")
+            {
+
+            }else
+            {
+                if(lastid!=rows[rows.length-1]['BillNo'])
+                {
+                    lastid=rows[rows.length-1]['BillNo'];
+                    adds(rows);
+
+                }else{
+
+                    return;
+                }
+
+            }
+
+        }
+
+        function test(val)
+        {
+           
+
+            alert(utils.CovValueToText(val,data.dataSource.Category));
+          
+        }
+
+
+       
+
+
+    </script>
+}
+
+@Html.RenderToolbar()
+
+
+
+<div id="condition" class="container_12" style="position:relative;">
+    <div class="grid_1 lbl">道路名称</div>
+    <div class="grid_2 val"><input type="text" data-bind="value:form.Address" class="z-txt" /></div>
+    <div class="grid_1 lbl">单位名称</div>
+    <div class="grid_2 val"><input type="text" data-bind="value:form.Name" class="z-txt" /></div>
+    <div class="grid_1 lbl">所属行业</div>
+    <div class="grid_2 val"><input type="text" data-bind="value:form.Type" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl">证书是否发放</div>
+    <div class="grid_2 val"><input type="text" data-bind="comboboxValue:form.Certificate,datasource:dataSource.Certificate" class="easyui-combobox z-txt" data-options="showblank:true" /></div>
+   
+
+    <div class="clear"></div>
+
+    <div class="prefix_9" style="position:absolute;top:5px;height:0;">
+        <a id="a_search" href="#" class="buttonHuge button-blue" data-bind="click:searchClick" style="margin:0 15px;">查询</a>
+        <a id="a_reset" href="#" class="buttonHuge button-blue" data-bind="click:clearClick">清空</a>
+    </div>
+</div>
+
+
+
+
+<div id="testss" class="easyui-tabs" data-bind="click:doFind">
+    <div title="详细信息">
+        <div style="position: absolute; height: 100%; overflow-y:auto ;overflow-x:hidden">
+            <table id="tbgrid" data-bind="datagrid:grid" style="scrollbar-darkshadow-color: #f00; height: 100%">
+                <thead>
+                    <tr>
+                        <th field="BillNo" hidden="hidden" sortable="true" align="center" width="90">流水号</th>
+                        <th field="IdentificationCode" hidden="hidden" align="left" width="100">排水户标识码</th>
+                        <th field="Address" @Html.HideColumn(Cols, "Address") sortable="true" align="center" width="100">道路名称</th>
+                        <th field="Name" @Html.HideColumn(Cols, "Name") sortable="true" align="center" width="400">单位名称</th>
+                        <th field="Displacement" @Html.HideColumn(Cols, "Displacement") sortable="true" align="center" width="100">排水量</th>
+                        <th field="Type" @Html.HideColumn(Cols, "Type") sortable="true" align="center" width="100">所属行业</th>
+                        <th field="Certificate" @Html.HideColumn(Cols, "Certificate") sortable="true" align="center" width="100" formatter="com.Certificate">证书是否发放</th>
+                        <th field="CertificateyTime" @Html.HideColumn(Cols, "CertificateyTime") sortable="true" align="center" width="200">证书有效期</th>
+                        <th field="Remark" @Html.HideColumn(Cols, "Remark") sortable="true" align="center" width="600">备注</th>
+                        <th field="OrgX" hidden="hidden" align="left" width="100">经度</th>
+                        <th field="OrgY" hidden="hidden" align="left" width="100">纬度</th>
+                     
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div title="地图查看" id="mapwin">
+        <div style="height: 100%;width:100%; overflow-y: hidden; overflow-x: hidden">
+            <div id="MyMapDiv" class="MapClass" style="height: 800px"></div>
+        </div>
+    </div>
+</div>
+
+
+

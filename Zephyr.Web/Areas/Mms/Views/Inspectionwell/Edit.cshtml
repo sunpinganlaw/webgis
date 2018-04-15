@@ -1,0 +1,226 @@
+﻿@{
+    ViewBag.Title = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section scripts{
+    <script src="~/Areas/Mms/ViewModels/mms.com.js"></script>
+    <script src="~/Areas/Mms/ViewModels/mms.viewModel.edit.js"></script>
+<script type="text/javascript" src="~/Content/arcgis/jsapi_vsdoc12_v38.js"></script>
+<link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/dijit/themes/tundra/tundra.css" />
+<link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/esri/css/esri.css" />
+<script type="text/javascript"
+        src="http://10.144.1.21/arcgis/library/3.17/jsapi/init.js"></script>
+    <script type="text/javascript">
+            var viewModel = function (data) {
+                var self = this;
+                mms.viewModel.edit.apply(this, arguments);
+            };
+            var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+        ko.bindingViewModel(new viewModel(data));
+
+
+        var sms;
+        var infoTemplate;
+        var MyMap;
+        var graphic;
+        var MyTiledMapServiceLayer 
+        showmap();
+
+        function showmap()
+        {
+         
+            dojo.require("esri.map");
+            require([
+                        "dojo/dom", "dojo/on",
+                        "esri/map", "esri/layers/GraphicsLayer", "esri/geometry/Point","esri/symbols/SimpleMarkerSymbol", "esri/symbols/PictureMarkerSymbol",
+                        "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/Color", "esri/InfoTemplate","esri/SpatialReference", 
+                        "dojo/domReady!"],
+                    function (dom, on, Map, GraphicsLayer, Point,
+                              SimpleMarkerSymbol,  PictureMarkerSymbol, SimpleLineSymbol,Graphic, Color) {
+                     
+                        MyTiledMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州底图1124/MapServer");
+                        MyMapDiv.innerHTML="";
+                        MyMap  = new esri.Map("MyMapDiv",  {extent: new esri.geometry.Extent({xmin:502975.0245478001,ymin:3789483.8053802885,xmax:538055.4814522,ymax:3803447.8707500007,spatialReference:{wkid:2436}})
+                    });
+                        MyMap.addLayer(MyTiledMapServiceLayer);
+                        graphicsLayer = new GraphicsLayer();
+                      
+                        sms =  new PictureMarkerSymbol({
+                            "url":"/images/InspectionWell.png",
+                            "height":15,
+                            "width":15,
+                            "type":"esriPMS",
+                            "angle": -30,
+                            "color": [255,255,255,64]
+                        });
+                 
+                        infoTemplate = new esri.InfoTemplate();
+                       
+
+                           
+
+                        
+                            var Category = utils.CovValueToText(data.form.Category,data.dataSource.Category);
+                            var Type =utils.CovValueToText(data.form.Type,data.dataSource.Type);
+                            var Form=utils.CovValueToText(data.form.Form,data.dataSource.Form);
+                            var WellType=utils.CovValueToText(data.form.WellType,data.dataSource.WellType);
+                            var AdministrativeArea =utils.CovValueToText(data.form.AdministrativeArea,data.dataSource.AdministrativeArea);
+                            var CoverMaterial=utils.CovValueToText(data.form.CoverMaterial,data.dataSource.CoverMaterial);
+                            var CoverSharp=utils.CovValueToText(data.form.CoverSharp,data.dataSource.CoverSharp);
+                            var AntifallNet =utils.CovValueToText(data.form.AntifallNet,data.dataSource.AntifallNet);
+                            var AntifallNetStatus=utils.CovValueToText(data.form.AntifallNetStatus,data.dataSource.AntifallNetStatus);
+                            var WellLevel=utils.CovValueToText(data.form.WellLevel,data.dataSource.WellLevel);
+                            var FacilityStatus =utils.CovValueToText(data.form.FacilityStatus,data.dataSource.FacilityStatus);
+
+
+
+                        var Depth=data.form.Depth;
+                        var GroundElevation=data.form.GroundElevation;
+                        var CoverSize=data.form.CoverSize;
+                     
+                        var WellLength=data.form.WellLength;
+                        var CoverSize=data.form.CoverSize;
+                        var WellWidth=data.form.WellWidth;
+                        var WellDiameter=data.form.WellDiameter;
+                        var WellHeight=data.form.WellHeight;
+                        var IdentificationCode=data.form.IdentificationCode;
+
+                        var point = new Point(data.form.OrgY, data.form.OrgX);
+                            var attr = {"Category":Category,"Type":Type,"Form":Form,"AdministrativeArea":AdministrativeArea,"CoverMaterial":CoverMaterial,"CoverSharp":CoverSharp,"AntifallNet":AntifallNet,
+                                "AntifallNetStatus":AntifallNetStatus,"WellLevel":WellLevel,"FacilityStatus":FacilityStatus,"Depth":Depth,"GroundElevation":GroundElevation,"CoverSize":CoverSize,
+                            
+                                "WellType":WellType,"WellLength":WellLength,"WellWidth":WellWidth,"WellDiameter":WellDiameter,"WellHeight":WellHeight,"IdentificationCode":IdentificationCode };
+
+                            var content = "<b>检查井类别:</b>&nbsp${Category}&nbsp&nbsp<br>"
+                                         + "<b>检查井类型:</b>&nbsp${Type}&nbsp&nbsp<br>"
+                                         + "<b>检查井形式:</b>&nbsp${Form}&nbsp&nbsp<br>"
+                                         + "<b>井盖材质:</b>&nbsp${CoverMaterial}&nbsp&nbsp<br>"
+                                         + "<b>井盖形状:</b>&nbsp${CoverSharp}&nbsp&nbsp<br>"
+                                         + "<b>安装防坠网:</b>&nbsp${AntifallNet}&nbsp&nbsp<br>"
+                                         + "<b>护网状态:</b>&nbsp${AntifallNetStatus}&nbsp&nbsp<br>"
+                                         + "<b>设施状态:</b>&nbsp${FacilityStatus}&nbsp&nbsp<br>"
+                                         + "<b>检查井井深(米):</b>&nbsp${Depth}&nbsp&nbsp<br>"
+                                         + "<b>地面高程(米):</b>&nbsp${GroundElevation}&nbsp&nbsp<br>"
+                                         + "<b>井盖尺寸:</b>&nbsp${CoverSize}&nbsp&nbsp<br>"
+                                         + "<b>井室类型:</b>&nbsp${WellType}&nbsp&nbsp<br>"
+                                         + "<b>井室长度(米):</b>&nbsp${WellLength}&nbsp&nbsp<br>"
+                                         + "<b>井室宽度(米):</b>&nbsp${WellWidth}&nbsp&nbsp<br>"
+                            infoTemplate.setTitle("检查井编号:"+"${IdentificationCode}");
+                            infoTemplate.setContent(content);
+                            graphic = new esri.Graphic(point, sms, attr, infoTemplate);
+                            graphicsLayer.add(graphic);
+                       
+                        MyMap.resize();
+                        MyMap.addLayer(graphicsLayer);
+                        MyMap.centerAt(new Point(data.form.OrgY, data.form.OrgX),graphicsLayer);  
+                    }
+             )
+        }
+
+
+
+    </script>
+}
+
+<div class="z-toolbar">
+    <a id="a_save" href="#" plain="true" class="easyui-linkbutton" icon="icon-save" data-bind="click:saveClick,linkbuttonDisable:readonly" title="保存">保存</a>
+    <a id="a_undo" href="#" plain="true" class="easyui-linkbutton" icon="icon-undo" data-bind="click:rejectClick,linkbuttonDisable:readonly" title="撤消">撤消</a>
+    <a id="a_audit" href="#" plain="true" class="easyui-linkbutton" icon="icon-user-accept" data-bind="click:auditClick,easyuiLinkbutton:approveButton" title="审核">审核</a>
+    <a id="a_printer" href="#" plain="true" class="easyui-linkbutton" icon="icon-printer" title="打印" data-bind="click:printClick">打印</a>
+    <div class="datagrid-btn-separator"></div>
+    <a id="a_other" href="#" class="easyui-splitbutton" data-options="menu:'#divother',iconCls:'icon-application_go'" title="其他">其他</a>
+    <div class="datagrid-btn-separator"></div>
+    <a id="a_first" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_first" data-bind="click:firstClick,linkbuttonEnable:scrollKeys.firstEnable" title="第一条"></a>
+    <a id="a_previous" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_previous" data-bind="click:previousClick,linkbuttonEnable:scrollKeys.previousEnable" title="上一条"></a>
+    <a id="a_next" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_next" data-bind="click:nextClick,linkbuttonEnable:scrollKeys.nextEnable" title="下一条"></a>
+    <a id="a_last" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_last" data-bind="click:lastClick,linkbuttonEnable:scrollKeys.lastEnable" title="最后一条"></a>
+</div>
+
+
+
+<div id="master" class="container_12" data-bind="inputwidth:0.9">
+    <div class="grid_1 lbl">信息编号</div>
+    <div class="grid_3 val"><input type="text" id="BillNo" name="BillNo" data-bind="value:form.BillNo,readOnly:true" class="z-txt readonly" /></div>
+    <div class="grid_1 lbl">所在道路名称</div>
+    <div class="grid_3 val"><input type="text" id="Address" name="Address" data-bind="value:form.Address" class="z-txt " /></div>
+    <div class="grid_1 lbl">所在区域</div>
+    <div class="grid_3 val "><input type="text" id="AdministrativeArea" name="AdministrativeArea" data-bind="comboboxValue:form.AdministrativeArea,datasource:dataSource.AdministrativeArea,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl">检查井类别</div>
+    <div class="grid_3 val"><input type="text" id="Category" name="Category" data-bind="comboboxValue:form.Category,datasource:dataSource.Category,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">检查井类型</div>
+    <div class="grid_3 val"><input type="text" id="Type" name="Type" data-bind="comboboxValue:form.Type,datasource:dataSource.Type,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">检查井形式</div>
+    <div class="grid_3 val"><input type="text" id="Form" name="Form" data-bind="comboboxValue:form.Form,datasource:dataSource.Form,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl ">检查井井深(米)</div>
+    <div class="grid_3 val"><input type="text" id="Depth" name="Depth" data-bind="value:form.AddDepthress" class="z-txt" /></div>
+    <div class="grid_1 lbl">地面高程(米)</div>
+    <div class="grid_3 val"><input type="text" id="GroundElevation" name="GroundElevation" data-bind="value:form.GroundElevation" class="z-txt" /></div>
+    <div class="grid_1 lbl">井盖材质</div>
+    <div class="grid_3 val "><input type="text" id="CoverMaterial" name="CoverMaterial" data-bind="comboboxValue:form.CoverMaterial,datasource:dataSource.CoverMaterial,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+
+    <div class="clear"></div>
+
+
+    <div class="grid_1 lbl">井盖尺寸(米)</div>
+    <div class="grid_3 val"><input type="text" id="CoverSize" name="CoverSize" data-bind="value:form.CoverSize" class="z-txt" /></div>
+    <div class="grid_1 lbl">井室类型</div>
+    @*<div class="grid_3 val"><input type="text" id="WellType" name="WellType" data-bind="value:form.WellType" class="z-txt" /></div>*@
+    <div class="grid_3 val"><input type="text" id="WellType" name="WellType" data-bind="comboboxValue:form.WellType,datasource:dataSource.WellType,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">井室长度(米)</div>
+    <div class="grid_3 val "><input type="text" id="WellLength" name="WellLength" data-bind="value:form.WellLength" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+
+    <div class="grid_1 lbl">井室宽度(米)</div>
+    <div class="grid_3 val"><input type="text" id="WellWidth" name="WellWidth" data-bind="value:form.WellWidth" class="z-txt" /></div>
+    <div class="grid_1 lbl">井室直径(米)</div>
+    <div class="grid_3 val"><input type="text" id="WellDiameter" name="WellDiameter" data-bind="value:form.WellDiameter" class="z-txt" /></div>
+    <div class="grid_1 lbl">井室高度(米)</div>
+    <div class="grid_3 val "><input type="text" id="WellHeight" name="WellHeight" data-bind="value:form.WellHeight" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl ">测绘时水深(米)</div>
+    <div class="grid_3 val"><input type="text" id="OrgWaterDepth" name="OrgWaterDepth" data-bind="value:form.OrgWaterDepth" class="z-txt" /></div>
+    <div class="grid_1 lbl">测绘时泥深(米)</div>
+    <div class="grid_3 val"><input type="text" id="OrgDirtDepth" name="OrgDirtDepth" data-bind="value:form.OrgDirtDepth" class="z-txt" /></div>
+    <div class="grid_1 lbl">井底形式</div>
+    <div class="grid_3 val "><input type="text" id="BottomType" name="BottomType" data-bind="comboboxValue:form.BottomType,datasource:dataSource.BottomType,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+
+    <div class="clear"></div>
+
+
+
+    <div class="grid_1 lbl ">安装防护网</div>
+    <div class="grid_3 val"><input type="text" id="AntifallNet" name="AntifallNet" data-bind="comboboxValue:form.AntifallNet,datasource:dataSource.AntifallNet,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">防护网状态</div>
+    <div class="grid_3 val"><input type="text" id="AntifallNetStatus" name="AntifallNetStatus" data-bind="comboboxValue:form.AntifallNetStatus,datasource:dataSource.AntifallNetStatus,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">检查井等级</div>
+    <div class="grid_3 val "><input type="text" id="WellLevel" name="WellLevel" data-bind="comboboxValue:form.WellLevel,datasource:dataSource.WellLevel,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl">设施状态</div>
+    <div class="grid_3 val"><input type="text" id="FacilityStatus" name="FacilityStatus" data-bind="comboboxValue:form.FacilityStatus,datasource:dataSource.FacilityStatus,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">经度</div>
+    <div class="grid_3 val"><input type="text" id="OrgY" name="OrgY" data-bind="value:form.OrgY" class="z-txt" /></div>
+    <div class="grid_1 lbl">纬度</div>
+    <div class="grid_3 val "><input type="text" id="OrgX" name="OrgX" data-bind="value:form.OrgX" class="z-txt" /></div>
+
+    <div class="clear"></div>
+</div>
+    <div title="地图查看" id="mapwin">
+
+        <div id="MyMapDiv" class="MapClass" style="height: 800px"></div>
+     
+    </div>

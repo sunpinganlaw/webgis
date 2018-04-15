@@ -1,0 +1,220 @@
+﻿@{
+    ViewBag.Title = "title";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var Cols = new Zephyr.Models.sys_roleMenuColumnMapService().GetCurrentUserMenuColumns();
+}
+
+@section scripts{
+
+    <script src="~/Areas/Mms/ViewModels/mms.com.js"></script>
+    <script src="~/Areas/Mms/ViewModels/mms.viewModel.search.js"></script>
+    <script type="text/javascript" src="~/Content/arcgis/jsapi_vsdoc12_v38.js"></script>
+    <link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/dijit/themes/tundra/tundra.css" />
+    <link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/esri/css/esri.css" />
+    <script type="text/javascript"
+        src="http://10.144.1.21/arcgis/library/3.17/jsapi/init.js"></script>
+    <script type="text/javascript">
+
+       
+        var lastid='0';
+        var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+        var viewModel = function(){
+            var self = this;
+            mms.viewModel.search.apply(this,arguments);
+            com.Category = utils.fnValueToText(data.dataSource.Category);
+            com.ControlType = utils.fnValueToText(data.dataSource.ControlType);
+            com.GateForm = utils.fnValueToText(data.dataSource.GateForm);
+            com.AdministrativeArea = utils.fnValueToText(data.dataSource.AdministrativeArea);
+            com.FacilityStatus = utils.fnValueToText(data.dataSource.FacilityStatus);
+
+        }
+        ko.bindingViewModel(new viewModel(data));
+      
+     
+      function adds(rows)
+      {
+          var graphicsLayer;
+          var sms;
+          var infoTemplate;
+          var MyMap;
+          var graphic;
+       
+        dojo.require("esri.map");
+        require([
+                    "dojo/dom", "dojo/on",
+                    "esri/map", "esri/layers/GraphicsLayer", "esri/geometry/Point", "esri/symbols/SimpleMarkerSymbol",
+                    "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/Color", "esri/InfoTemplate","esri/SpatialReference",
+                    "dojo/domReady!"],
+                function (dom, on, Map, GraphicsLayer, Point,
+                          SimpleMarkerSymbol, SimpleLineSymbol, Graphic, Color) {
+                    //var MyTiledMapServiceLayer = new esri.layers.ArcGISTiledMapServiceLayer ("http://www.arcgisonline.cn/ArcGIS/rest/services/ChinaOnlineCommunity/MapServer");
+                    
+                    var MyTiledMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州底图1124/MapServer");
+                    MyMapDiv.innerHTML="";
+                    MyMap  = new esri.Map("MyMapDiv");
+                    MyMap.addLayer(MyTiledMapServiceLayer);
+                    graphicsLayer = new GraphicsLayer();
+                    sms = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 20,
+                                  new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,
+                                          new Color([255, 0, 0]), 1),
+                                  new Color([0, 255, 0, 0.25]));
+                    infoTemplate = new esri.InfoTemplate();
+                    for (var i = 0; i < rows.length; i++) {
+
+
+                        var Category = utils.CovValueToText(rows[i]['Category'],data.dataSource.Category);
+                        var ControlType = utils.CovValueToText(rows[i]['ControlType'],data.dataSource.ControlType);
+                        var GateForm = utils.CovValueToText(rows[i]['GateForm'],data.dataSource.GateForm);
+                        var AdministrativeArea = utils.CovValueToText(rows[i]['AdministrativeArea'],data.dataSource.AdministrativeArea);
+                        var FacilityStatus = utils.CovValueToText(rows[i]['FacilityStatus'],data.dataSource.FacilityStatus);
+
+
+                        var IdentificationCode=rows[i]['IdentificationCode'];
+                        var Name=rows[i]['Name'];
+                        var Material=rows[i]['Material'];
+                        var Manufacturer=rows[i]['Manufacturer'];
+                        var Type=rows[i]['Type'];
+                        var GroundElevation=rows[i]['GroundElevation'];
+                        var Height=rows[i]['Height'];
+                        var Width=rows[i]['Width'];
+                        var GateNumber=rows[i]['GateNumber'];
+                        var HoleNumber=rows[i]['HoleNumber'];
+
+                        var point = new Point(rows[i]['OrgY'], rows[i]['OrgX']);
+                        var attr = {"Category":Category,"ControlType":ControlType,"GateForm":GateForm,"AdministrativeArea":AdministrativeArea,
+                            "FacilityStatus":FacilityStatus,"Name":Name,"Material":Material,"GateNumber":GateNumber,"HoleNumber":HoleNumber,
+                            "Manufacturer":Manufacturer,"Type":Type,"GroundElevation":GroundElevation,"Height":Height,"Width":Width,"IdentificationCode":IdentificationCode };
+
+                        var content = "<b>闸门类别:</b>&nbsp${Category}&nbsp&nbsp<br>"
+                                         + "<b>控制类型:</b>&nbsp${ControlType}&nbsp&nbsp<br>"
+                                         + "<b>闸门材质:</b>&nbsp${Material}&nbsp&nbsp<br>"
+                                         + "<b>闸门型号:</b>&nbsp${Type}&nbsp&nbsp<br>"
+                                         + "<b>闸门高程(米):</b>&nbsp${GroundElevation}&nbsp&nbsp<br>"
+                                         + "<b>闸门净高(米):</b>&nbsp${Height}&nbsp&nbsp<br>"
+                                         + "<b>闸门净宽(米):</b>&nbsp${Width}&nbsp&nbsp<br>"
+                                         + "<b>闸门孔数:</b>&nbsp${HoleNumber}&nbsp&nbsp<br>"
+                                         + "<b>设施状态:</b>&nbsp${FacilityStatus}&nbsp&nbsp<br>"
+                                       
+                            infoTemplate.setTitle("闸门标识码:"+"${IdentificationCode}");
+                            infoTemplate.setContent(content);
+                            graphic = new esri.Graphic(point, sms, attr, infoTemplate);
+                            graphicsLayer.add(graphic);
+                        }
+                        MyMap.resize();
+                        MyMap.addLayer(graphicsLayer);
+                        MyMap.centerAt(new Point(rows[rows.length-1]['OrgY'], rows[rows.length-1]['OrgX']));  
+                }
+         )
+        }
+
+
+        function doFind() {
+            var rows = $("#tbgrid").datagrid("getRows");
+            var pp = $('#testss').tabs('getSelected');
+            if(pp.panel('options').title!="地图查看")
+            {
+
+            }else
+            {
+                if(lastid!=rows[rows.length-1]['BillNo'])
+                {
+                    lastid=rows[rows.length-1]['BillNo'];
+                    adds(rows);
+
+                }else{
+
+                    return;
+                }
+
+            }
+
+        }
+
+        function test(val)
+        {
+           
+
+            alert(utils.CovValueToText(val,data.dataSource.Category));
+          
+        }
+
+
+       
+
+
+    </script>
+}
+
+@Html.RenderToolbar()
+
+
+
+<div id="condition" class="container_12" style="position:relative;">
+    <div class="grid_1 lbl">闸门标识码</div>
+    <div class="grid_2 val"><input type="text" data-bind="value:form.IdentificationCode" class="z-txt" /></div>
+    <div class="grid_1 lbl">闸门名称</div>
+    <div class="grid_2 val"><input type="text" data-bind="value:form.Name" class="z-txt" /></div>
+    <div class="grid_1 lbl">所在区域</div>
+    <div class="grid_2 val"><input type="text" data-bind="comboboxValue:form.AdministrativeArea,datasource:dataSource.AdministrativeArea" class="easyui-combobox z-txt" data-options="showblank:true" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl">闸门类别</div>
+    <div class="grid_2 val"><input type="text" data-bind="comboboxValue:form.Category,datasource:dataSource.Category" class="easyui-combobox z-txt" data-options="showblank:true" /></div>
+    <div class="grid_1 lbl">控制类型</div>
+    <div class="grid_2 val"><input type="text" data-bind="comboboxValue:form.ControlType,datasource:dataSource.ControlType" class="easyui-combobox z-txt" data-options="showblank:true" /></div>
+    <div class="grid_1 lbl">启闭形式</div>
+    <div class="grid_2 val"><input type="text" data-bind="comboboxValue:form.GateForm,datasource:dataSource.GateForm" class="easyui-combobox z-txt" data-options="showblank:true" /></div>
+
+    <div class="clear"></div>
+
+    <div class="prefix_9" style="position:absolute;top:5px;height:0;">
+        <a id="a_search" href="#" class="buttonHuge button-blue" data-bind="click:searchClick" style="margin:0 15px;">查询</a>
+        <a id="a_reset" href="#" class="buttonHuge button-blue" data-bind="click:clearClick">清空</a>
+    </div>
+</div>
+
+
+
+
+<div id="testss" class="easyui-tabs" data-bind="click:doFind">
+    <div title="详细信息">
+        <div style="position: absolute; height: 100%; overflow-y:auto ;overflow-x:hidden">
+            <table id="tbgrid" data-bind="datagrid:grid" style="scrollbar-darkshadow-color: #f00; height: 100%">
+                <thead>
+                    <tr>
+                        <th field="BillNo" hidden="hidden" sortable="true" align="center" width="90">流水号</th>
+                        <th field="IdentificationCode" align="left" width="100">标识码</th>
+                        <th field="Name" @Html.HideColumn(Cols, "Name") sortable="true" align="center" width="100">闸门名称</th>
+                        <th field="AdministrativeArea" @Html.HideColumn(Cols, "AdministrativeArea") sortable="true" align="center" width="100" formatter="com.AdministrativeArea">位置</th>
+                        <th field="Category" @Html.HideColumn(Cols, "Category") sortable="true" align="center" width="100" formatter="com.Category">闸门类别</th>
+                        <th field="ControlType" @Html.HideColumn(Cols, "ControlType") sortable="true" align="center" width="100" formatter="com.ControlType">控制类型</th>
+                        <th field="GateForm" @Html.HideColumn(Cols, "GateForm") sortable="true" align="center" width="100" formatter="com.GateForm">启闭形式</th>
+                        <th field="Material" @Html.HideColumn(Cols, "Material") sortable="true" align="center" width="100">闸门材质</th>
+                        <th field="Manufacturer" @Html.HideColumn(Cols, "Manufacturer") sortable="true" align="center" width="100">生产厂家</th>
+                        <th field="Type" @Html.HideColumn(Cols, "Type") sortable="true" align="center" width="100">闸门型号</th>
+                        <th field="GroundElevation" @Html.HideColumn(Cols, "GroundElevation") sortable="true" align="center" width="100">闸门高程(米)</th>
+                        <th field="Height" @Html.HideColumn(Cols, "Height") sortable="true" align="center" width="100">闸门净高(米)</th>
+                        <th field="Width" @Html.HideColumn(Cols, "Width") sortable="true" align="center" width="100">闸门净宽(米)</th>
+                        <th field="GateNumber" @Html.HideColumn(Cols, "GateNumber") sortable="true" align="center" width="100">闸门排数</th>
+                        <th field="HoleNumber" @Html.HideColumn(Cols, "HoleNumber") sortable="true" align="center" width="100">闸门孔数</th>
+                        <th field="FacilityStatus" @Html.HideColumn(Cols, "FacilityStatus") sortable="true" align="center" width="100" formatter="com.FacilityStatus">设施状态</th>
+                        <th field="OrgX" hidden="hidden" align="left" width="100">经度</th>
+                        <th field="OrgY" hidden="hidden" align="left" width="100">纬度</th>
+                     
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div title="地图查看" id="mapwin">
+        <div style="height: 100%;width:100%; overflow-y: hidden; overflow-x: hidden">
+            <div id="MyMapDiv" class="MapClass" style="height: 800px"></div>
+        </div>
+    </div>
+</div>
+
+
+

@@ -1,0 +1,219 @@
+﻿@{
+    ViewBag.Title = "Home";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section head {
+     <style type="text/css">
+        .grid_3{margin-top:8px;margin-bottom:8px;width: 78px;height: 82px; padding-top:8px;}
+        .center{ background-color:#eff6fe !important;}
+        .container_16 {  background:url(/Images/mms/库房管理流程.jpg) center no-repeat !important; height:408px;margin: 25px auto; width: 500px;position: relative;text-align: center;}
+        .container_16 a:hover { background: url(/Images/mms/HotBtnBack.jpg) center no-repeat;color: black;text-decoration: none;cursor: pointer;}
+        .panel-tool { display: none;}
+        ul { padding-top: 2px;}
+        ul li{padding-left:18px;line-height:18px;background:url('/Content/css/icon/icon/arrow_right_16.png') no-repeat;}
+        ul li a{ cursor: pointer;}
+    </style>
+}
+
+@section scripts{
+<script type="text/javascript" src="~/Content/arcgis/jsapi_vsdoc12_v38.js"></script>
+<link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/dijit/themes/tundra/tundra.css" />
+<link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/esri/css/esri.css" />
+<script type="text/javascript"
+        src="http://10.144.1.21/arcgis/library/3.17/jsapi/init.js"></script>
+    <script type="text/javascript" >
+        $(function () {
+            $('a').each(function () {
+                var that = $(this), data = parent.$("body", parent.document).data("menulist");
+                $.each(data||[], function () {
+                    if (this.URL == that.attr('url')) {
+                        that.attr('title', this.MenuName);
+                        that.attr('icon', this.IconClass);
+                    }
+                });
+            }).click(function () {
+                var that = $(this);
+                com.openTab(that.attr('title'), that.attr('url'), that.attr('icon'));
+            });
+
+            using('layout', function () {
+                var box = $("#layoutbox");
+                box.width($(window).width() - 4).height($(window).height() - 4).layout();
+                $(window).resize(function () { box.width($(window).width() - 4).height($(window).height() - 4).layout('resize'); });
+            });
+        });
+
+        var djConfig = { parseOnLoad: true };
+        dojo.require("dijit.layout.BorderContainer");
+        dojo.require("dijit.layout.ContentPane");
+        dojo.require("esri.map");
+        dojo.require("esri/geometry/Extent");
+        dojo.require("esri/layers/FeatureLayer");
+        dojo.require("esri/layers/FeatureLayer");
+        var map;
+        var extent;
+        function init() {
+            map = new esri.Map("map");
+            var myTiledMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州底图1124/MapServer");
+            map.addLayer(myTiledMapServiceLayer);
+
+
+            var layer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/管网总图/MapServer");
+            map.addLayer(layer);
+            var resizeTimer;
+            dojo.connect(map, 'onLoad', function(theMap) {
+                dojo.connect(dijit.byId('map'), 'resize', function() {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(function() {
+                        map.resize();
+                        map.reposition();
+                    }, 500);
+                });
+            });
+
+            //map = new esri.Map("map");
+            //var layer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/管网总图/MapServer");
+            //map.addLayer(layer);
+          
+        }
+
+        dojo.addOnLoad(init);
+
+
+        //var map, dialog;
+        //require([
+        //  "esri/map", "esri/layers/FeatureLayer",
+        //  "esri/symbols/SimpleFillSymbol", "esri/symbols/SimpleLineSymbol",
+        //  "esri/renderers/SimpleRenderer", "esri/graphic", "esri/lang",
+        //  "esri/Color", "dojo/number", "dojo/dom-style","esri/symbols/SimpleMarkerSymbol",
+        //  "dijit/TooltipDialog", "dijit/popup", "dojo/domReady!"
+        //], function (
+        //  Map, FeatureLayer,
+        //  SimpleFillSymbol, SimpleLineSymbol,
+        //  SimpleRenderer, Graphic, esriLang,
+        //  Color, number, domStyle,SimpleMarkerSymbol,
+        //  TooltipDialog, dijitPopup
+        //) {
+        //    map = new esri.Map("map");
+
+        //    var myTiledMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州底图1123/MapServer");
+        //        map.addLayer(myTiledMapServiceLayer);
+
+        //        var southCarolinaCounties = new esri.layers.FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/一期排水管1118/FeatureServer/0", {
+        //        mode: FeatureLayer.MODE_SNAPSHOT,
+        //        outFields: ["序号 ", "排水管标识", "所在道路名", "序号"]
+        //    });
+        //    //southCarolinaCounties.setDefinitionExpression("所在道路名 = '中山北路'");
+
+        //   var sms = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 20,
+        //                     new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,
+        //                             new Color([255, 0, 0]), 1),
+        //                     new Color([0, 255, 0, 0.25]));
+        //    map.addLayer(southCarolinaCounties);
+        //    map.infoWindow.resize(245, 125);
+
+        //    dialog = new TooltipDialog({
+        //        id: "tooltipDialog",
+        //        style: "position: absolute; width: 250px; font: normal normal normal 10pt Helvetica;z-index:100"
+        //    });
+        //    dialog.startup();
+
+        //    var highlightSymbol = new SimpleFillSymbol(
+        //      SimpleFillSymbol.STYLE_SOLID,
+        //      new SimpleLineSymbol(
+        //        SimpleLineSymbol.STYLE_SOLID,
+        //        new Color([255, 0, 0]), 3
+        //      ),
+        //      new Color([125, 125, 125, 0.35])
+        //    );
+
+        //    ////close the dialog when the mouse leaves the highlight graphic
+        //    map.on("load", function () {
+        //        map.graphics.enableMouseEvents();
+        //        map.graphics.on("mouse-out", closeDialog);
+
+        //    });
+
+        //    ////listen for when the onMouseOver event fires on the countiesGraphicsLayer
+        //    ////when fired, create a new graphic with the geometry from the event.graphic and add it to the maps graphics layer
+        //    southCarolinaCounties.on("mouse-over", function (evt) {
+        //        var t = "<b>${序号}</b><hr><b>2000 Population: </b>${序号}<br>"
+        //          + "<b>2000 Population per Sq. Mi.: </b>${排水管标识}<br>"
+        //          + "<b>2007 Population: </b>${所在道路名}<br>"
+        //          + "<b>2007 Population per Sq. Mi.: </b>${序号}";
+
+        //        var content = esriLang.substitute(evt.graphic.attributes, t);
+        //        var highlightGraphic = new Graphic(evt.graphic.geometry, highlightSymbol);
+        //        map.graphics.add(highlightGraphic);
+
+        //        dialog.setContent(content);
+
+        //        domStyle.set(dialog.domNode, "opacity", 0.85);
+        //        dijitPopup.open({
+        //            popup: dialog,
+        //            x: evt.pageX,
+        //            y: evt.pageY
+        //        });
+        //    });
+
+        //    function closeDialog() {
+        //        map.graphics.clear();
+        //        dijitPopup.close(dialog);
+        //    }
+
+        //});
+
+
+
+
+
+
+
+    </script>
+}
+
+    <div id="layoutbox">
+        <div @*region="center"*@ class="center"  >
+
+            <div id="map" style="height:800px"> </div>
+           
+          
+        </div>
+        
+        <div region="east" split="true"  style="width:180px;overflow: hidden;visibility:hidden">
+            <div id="right" class="easyui-layout" fit="true">
+                    <div region="north" title="报表中心" style="height:200px" border="false" split="true" data-options="collapse:false">
+                        <ul>
+                            <li><a url="/mms/report/balanceaccount" title="收发存情况查询">收发存情况查询</a></li>
+                            <li><a url="/mms/report/receivesummary" title="收料情况查询">收料情况查询</a></li>
+                            <li><a url="/mms/report/sendsummary" title="发料情况查询">发料情况查询</a></li>
+                            <li><a url="/mms/report/warehousequery" title="库存查询">库存查询</a></li>
+                            <li><a url="/mms/report/materialwarnning" title="库存预警报告">库存预警报告</a></li>
+                            <li><a url="/mms/report/warehouseaccount" title="库存流水查询">库存流水查询</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div region="center" title="单据管理中心" border="false" split="true">
+                        <ul>
+                            <li><a url="/mms/receive" title="材料收料单">收料单</a></li>
+                            <li><a url="/mms/send" title="材料发料单">发料单</a></li>
+                            <li><a url="/mms/refund" title="材料退库单">退库单</a></li> 
+                            <li><a url="/mms/return" title="材料退货单">退货单</a></li> 
+                            <li><a url="/mms/check" title="材料盘点单">盘点单</a></li> 
+                            <li><a url="/mms/transfer" title="材料调拨单">调拨单</a></li> 
+                            <li><a url="/mms/lossreport" title="材料报损单">报损单</a></li> 
+                            <li><a url="/mms/repair" title="材料维修单">维修单</a></li> 
+                            <li><a url="/mms/deal" title="材料处置单">处置单</a></li> 
+                            <li><a url="/mms/direct" title="直入直出单">直入直出单</a></li> 
+                            <li><a url="/mms/rentin" title="租赁进场单">租赁进场单</a></li> 
+                            <li><a url="/mms/rentoff" title="租赁停租单">租赁停租单</a></li>
+                            <li><a url="/mms/rentout" title="租赁出场单">租赁出场单</a></li> 
+                        </ul>
+                    </div>
+            </div>
+        </div>  
+    </div> 
+

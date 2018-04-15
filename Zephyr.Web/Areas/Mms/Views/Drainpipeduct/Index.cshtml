@@ -1,0 +1,448 @@
+﻿@{
+    ViewBag.Title = "title";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var Cols = new Zephyr.Models.sys_roleMenuColumnMapService().GetCurrentUserMenuColumns();
+}
+
+@section scripts{
+
+    <script src="~/Areas/Mms/ViewModels/mms.com.js"></script>
+    <script src="~/Areas/Mms/ViewModels/mms.viewModel.search.js"></script>
+    <script type="text/javascript" src="~/Content/arcgis/jsapi_vsdoc12_v38.js"></script>
+    <link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/dijit/themes/tundra/tundra.css" />
+    <link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/esri/css/esri.css" />
+    <script type="text/javascript"
+        src="http://10.144.1.21/arcgis/library/3.17/jsapi/init.js"></script>
+    <script type="text/javascript">
+
+       
+        var lastid='0';
+        var findsingle='0';
+        var lastsingleid='0'
+        var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+        var viewModel = function(){
+            var self = this;
+            mms.viewModel.search.apply(this,arguments);
+            com.Category = utils.fnValueToText(data.dataSource.Category);
+            com.AdministrativeArea = utils.fnValueToText(data.dataSource.AdministrativeArea);
+            com.Material = utils.fnValueToText(data.dataSource.Material);
+            com.SectionForm = utils.fnValueToText(data.dataSource.SectionForm);
+            com.GrooveType = utils.fnValueToText(data.dataSource.GrooveType);
+            com.Type = utils.fnValueToText(data.dataSource.Type);
+            com.PressureType = utils.fnValueToText(data.dataSource.PressureType);
+            com.FacilityStatus = utils.fnValueToText(data.dataSource.FacilityStatus);
+
+        }
+        ko.bindingViewModel(new viewModel(data));
+      
+     
+      function adds(rows)
+        {
+          
+          var Address;
+          var IdentificationCode;
+          var DrainageCode;
+          var Start_stopPoint;
+          var Category;
+          var  Length;
+          var  StartCode;
+          var StopCode;
+          var StartElevation;
+          var  StopElevation;
+          var Diameter;
+          var Material;
+          var PressureType;
+          var LiningMaterial;
+          var LiningThick;
+          var Slope;
+          var Siphon;
+          var OwnershipUnit;
+          var FacilityStatus;
+
+          var map, dialog;
+          require([
+            "esri/map", "esri/layers/FeatureLayer",
+            "esri/symbols/SimpleFillSymbol", "esri/symbols/SimpleLineSymbol",
+            "esri/renderers/SimpleRenderer", "esri/graphic", "esri/lang",
+            "esri/Color", "dojo/number", "dojo/dom-style","esri/symbols/SimpleMarkerSymbol",
+            "dijit/TooltipDialog", "dijit/popup", "dojo/domReady!"
+          ], function (
+            Map, FeatureLayer,
+            SimpleFillSymbol, SimpleLineSymbol,
+            SimpleRenderer, Graphic, esriLang,
+            Color, number, domStyle,SimpleMarkerSymbol,
+            TooltipDialog, dijitPopup
+          ) {
+              MyMapDiv.innerHTML="";
+              map = new esri.Map("MyMapDiv");
+            
+              var myTiledMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州底图1123/MapServer");
+              map.addLayer(myTiledMapServiceLayer);
+              var layer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/管网总图/MapServer");
+              map.addLayer(layer);
+              var southCarolinaCounties = new esri.layers.FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/排水管汇总/FeatureServer/0", {
+                  mode: FeatureLayer.MODE_SNAPSHOT,
+                  outFields: ["排水管标识", "所在道路名", "Drainage", "Start_stop","Category","Length","StartCode","StopCode","StartEleva","StopElevat","Diameter","Material","PressType","LiningMate","LineThick","Slope","Siphon","OwnerUnit","FacilitySt"]
+              });
+              //alert(findsingle);
+              if(findsingle=='0')
+              {
+                   
+                  var condition="1=1"
+                  var address=$("#address").val();
+                  var identificationCode=$("#identificationCode").val();
+                  var category=$("#category").val();
+                  var administrativearea=$("#administrativearea").combobox('getText');
+
+                  var ownershipunit=$("#ownershipunit").val();
+          
+                  if(address.length>0)
+                  {
+                      condition=condition+" and "+"所在道路名 ="+"'"+address+"'"
+                  }
+                  
+                  if(identificationCode.length>0)
+                  {
+                      condition=condition+" and "+"排水管标识 ="+"'"+identificationCode+"'"
+                  }
+
+                  if(category.length>0)
+                  {
+                      condition=condition+" and "+"管道类别 ="+"'"+category+"'"
+                  }
+
+                  if(administrativearea.length>0 & administrativearea!='== 请选择 ==')
+                  {
+                      //var  administrativearea_name=utils.CovValueToText(administrativearea,data.dataSource.AdministrativeArea);
+                      condition=condition+" and "+"所在区域 ="+"'"+administrativearea+"'"
+                  }
+                  if(ownershipunit.length>0)
+                  {
+                      condition=condition+" and "+"权属单位 ="+"'"+ownershipunit+"'"
+                  }
+
+                  //alert(condition);
+
+                  southCarolinaCounties.setDefinitionExpression(condition);
+                 
+              }else{
+
+                  var sss=rows.IdentificationCode;
+                  //alert(rows.length);
+                 southCarolinaCounties.setDefinitionExpression("排水管标识 ="+"'"+sss+"'");
+              }
+              
+             
+              var sms = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 20,
+                                new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,
+                                        new Color([255, 0, 0]), 1),
+                                new Color([0, 255, 0, 0.25]));
+              map.addLayer(southCarolinaCounties);
+              map.infoWindow.resize(245, 125);
+
+
+              //dijit.registry["tooltipDialog"].destroyRecursive();
+              var timestamp = Date.parse(new Date()).toString();
+                  dialog = new TooltipDialog({
+                      id: timestamp,
+                      style: "position: absolute; width: 250px; font: normal normal normal 10pt Helvetica;z-index:100"
+                  });
+                  dialog.startup();
+              var highlightSymbol = new SimpleFillSymbol(
+                SimpleFillSymbol.STYLE_SOLID,
+                new SimpleLineSymbol(
+                  SimpleLineSymbol.STYLE_SOLID,
+                  new Color([0, 0, 255]), 3
+                ),
+                new Color([125, 125, 125, 0.35])
+              );
+
+              ////close the dialog when the mouse leaves the highlight graphic
+              map.on("load", function () {
+                  map.graphics.enableMouseEvents();
+                  map.graphics.on("mouse-out", closeDialog);
+
+              });
+
+              ////listen for when the onMouseOver event fires on the countiesGraphicsLayer
+              ////when fired, create a new graphic with the geometry from the event.graphic and add it to the maps graphics layer
+              southCarolinaCounties.on("mouse-over", function (evt) {
+                  //evt.graphic.attributes.LineWt="88";
+                  var find_id=0;
+                  var id=evt.graphic.attributes.排水管标识;
+
+                  if(findsingle=='1')
+                  {
+                      IdentificationCod=rows.IdentificationCod;
+                      DrainageCode=rows.DrainageCode;
+                      Start_stopPoint=rows.Start_stopPoint;
+                      Category=utils.CovValueToText(rows.Category,data.dataSource.Category);
+                      Length=rows.Length;
+                      StartCode=rows.StartCode;
+                      StopCode=rows.StopCode;
+                      StartElevation=rows.StartElevation;
+                      StopElevation=rows.StopElevation;
+                      //Diameter=rows[i]["Diameter"];
+                      Diameter=parseFloat(rows.Diameter)*1000+"  mm";
+                      PressureType=utils.CovValueToText(rows.PressureType,data.dataSource.PressureType);
+                      Material=utils.CovValueToText(rows.Material,data.dataSource.Material);
+                      LiningMaterial=utils.CovValueToText(rows.LiningMaterial,data.dataSource.LiningMaterial);
+                      LiningThick=rows.LiningThick;
+                      Slope=rows.Slope;
+                      Siphon=rows.Siphon;
+                      OwnershipUnit=rows.OwnershipUnit;
+                      FacilityStatus=utils.CovValueToText(rows.FacilityStatus,data.dataSource.FacilityStatus);
+                      find_id=1;
+
+                  }else{
+
+                      for (var i = 0; i < rows.length; i++) {
+
+                          if(rows[i]["IdentificationCode"]==id)
+                          {
+                              IdentificationCod=rows[i]["IdentificationCod"];
+                              DrainageCode=rows[i]["DrainageCode"];
+                              Start_stopPoint=rows[i]["Start_stopPoint"];
+                              Category=utils.CovValueToText(rows[i]['Category'],data.dataSource.Category);
+                              Length=rows[i]["Length"];
+                              StartCode=rows[i]["StartCode"];
+                              StopCode=rows[i]["StopCode"];
+                              StartElevation=rows[i]["StartElevation"];
+                              StopElevation=rows[i]["StopElevation"];
+                              //Diameter=rows[i]["Diameter"];
+                              Diameter=parseFloat(rows[i]["Diameter"])*1000+"  mm";
+                              PressureType=utils.CovValueToText(rows[i]['PressureType'],data.dataSource.PressureType);
+                              Material=utils.CovValueToText(rows[i]['Material'],data.dataSource.Material);
+                              LiningMaterial=utils.CovValueToText(rows[i]['LiningMaterial'],data.dataSource.LiningMaterial);
+                              LiningThick=rows[i]["LiningThick"];
+                              Slope=rows[i]["Slope"];
+                              Siphon=rows[i]["Siphon"];
+                              OwnershipUnit=rows[i]["OwnershipUnit"];
+                              FacilityStatus=utils.CovValueToText(rows[i]['FacilityStatus'],data.dataSource.FacilityStatus);
+                              find_id=1;
+                              break;
+                          }
+
+                      }
+
+                  }
+
+
+                  if(find_id==1)
+                  {
+                      evt.graphic.attributes.Start_stop=Start_stopPoint;
+                      evt.graphic.attributes.Category=Category;
+                      evt.graphic.attributes.Length=Length;
+                      evt.graphic.attributes.StartCode=StartCode;
+                      evt.graphic.attributes.StopCode=StopCode;
+                      evt.graphic.attributes.StartEleva=StartElevation;
+                      evt.graphic.attributes.StopElevat=StopElevation;
+                      evt.graphic.attributes.Diameter=Diameter;
+                      evt.graphic.attributes.PressType=PressureType;
+                      evt.graphic.attributes.Material=Material;
+                      evt.graphic.attributes.LiningMate=LiningMaterial;
+                      evt.graphic.attributes.LineThick=LiningThick;
+                      evt.graphic.attributes.Slope=Slope;
+                      evt.graphic.attributes.Siphon=Siphon;
+                      evt.graphic.attributes.OwnerUnit=OwnershipUnit;
+                      evt.graphic.attributes.FacilitySt=FacilityStatus;
+                  }else
+                  {
+
+                     
+                      return;
+                  }
+
+
+                  var t = "<b>${排水管标识}</b><hr><br>"
+                     + "<b>管道类别: </b>${Category}<br>"
+					+ "<b>管道起止: </b>${Start_stop}<br>"
+                    + "<b>管道长度: </b>${Length}<br>"
+                    + "<b>起点标高: </b>${StartEleva}<br>"
+                    + "<b>终点标高: </b>${StopElevat}<br>"
+                    + "<b>管道管径: </b>${Diameter}<br>"
+                    + "<b>管道坡度: </b>${Slope}<br>"
+                    + "<b>权属单位: </b>${OwnerUnit}<br>"
+
+                  var content = esriLang.substitute(evt.graphic.attributes, t);
+                  var highlightGraphic = new Graphic(evt.graphic.geometry, highlightSymbol);
+                  map.graphics.add(highlightGraphic);
+
+                  dialog.setContent(content);
+
+                  domStyle.set(dialog.domNode, "opacity", 0.85);
+                  dijitPopup.open({
+                      popup: dialog,
+                      x: evt.pageX,
+                      y: evt.pageY
+                  });
+              });
+
+              function closeDialog() {
+                  map.graphics.clear();
+                  dijitPopup.close(dialog);
+              }
+
+          });
+        }
+
+
+        function doFind() {
+            var rows = $("#tbgrid").datagrid("getRows");
+            var selectedrow =$("#tbgrid").datagrid("getSelected");
+
+            var pp = $('#testss').tabs('getSelected');
+            if(pp.panel('options').title!="地图查看")
+            {
+                //MyMapDiv.innerHTML="";
+            }else
+            {
+                if(selectedrow)
+                { 
+
+                    if(lastsingleid!=selectedrow.BillNo)
+                    {
+                        lastsingleid=selectedrow.BillNo;
+                        findsingle='1';
+                        adds(selectedrow);
+
+                    }
+                }else
+                {
+
+                    findsingle='0';
+                    if(lastid!=rows[rows.length-1]['BillNo'])
+                    {
+                        lastid=rows[rows.length-1]['BillNo'];
+                        findsingle='0';         
+                        adds(rows);
+                       
+                        
+
+                    }else{
+                        
+                        return;
+                    }
+                }
+
+               
+
+            }
+
+          
+        }
+
+        function Pre_searchClick()
+        {
+            var address_name=$("#address_name").val();
+          
+            if(address_name.length>0)
+            {
+                this.searchClick();
+            }else
+            {
+                return com.message('warning', "请先输入道路名称再查询");
+
+            }
+
+        }
+
+
+       
+        function convert_format(val,row,index){  
+            var res =parseFloat(val)*1000+" mm"; 
+          
+            return res;  
+        }
+        
+        function convert_Slope(val,row,index){ 
+            
+            var f = parseFloat(val)*1000; 
+            if (isNaN(f)) { 
+                return; 
+            }
+            
+            f = Math.round(f*10)/10; 
+            return f.toString()+"‰"; 
+           
+        }  
+
+
+    </script>
+}
+
+@Html.RenderToolbar()
+
+
+
+<div id="condition" class="container_12" style="position:relative;">
+    <div class="grid_1 lbl">管渠标识码</div>
+    <div class="grid_2 val"><input type="text" data-bind="value:form.IdentificationCode" class="z-txt" id="identificationCode" /></div>
+    <div class="grid_1 lbl">道路名称</div>
+    <div class="grid_2 val"><input type="text" data-bind="value:form.Address" required="required" class="z-txt" id="address" name="address"/></div>
+    <div class="grid_1 lbl">所在区域</div>
+    <div class="grid_2 val"><input type="text" data-bind="comboboxValue:form.AdministrativeArea,datasource:dataSource.AdministrativeArea" class="easyui-combobox z-txt" data-options="showblank:true" id="administrativearea" /></div>
+   
+
+    <div class="clear"></div>
+    <div class="grid_1 lbl">管渠类别</div>
+    <div class="grid_2 val"><input type="text" data-bind="comboboxValue:form.Category,datasource:dataSource.Category" class="easyui-combobox z-txt" data-options="showblank:true" id="category" /></div>
+    <div class="grid_1 lbl">按权属单位</div>
+    <div class="grid_2 val"><input type="text" data-bind="value:form.OwnershipUnit" required="required" class="z-txt" id="ownershipunit" /></div>
+    <div class="grid_1 lbl">管渠材质</div>
+    <div class="grid_2 val"><input type="text" data-bind="comboboxValue:form.Material,datasource:dataSource.Material" class="easyui-combobox z-txt" data-options="showblank:true" id="Material" /></div>
+    <div class="clear"></div>
+
+
+    <div class="prefix_9" style="position:absolute;top:5px;height:0;">
+        <a id="a_search" href="#" class="buttonHuge button-blue" data-bind="click:searchClick" style="margin:0 15px;">查询</a>
+        <a id="a_reset" href="#" class="buttonHuge button-blue" data-bind="click:clearClick">清空</a>
+    </div>
+</div>
+
+
+
+
+<div id="testss" class="easyui-tabs" data-bind="click:doFind">
+    <div title="详细信息">
+        <div style="position: absolute; height: 100%; overflow-y:auto ;overflow-x:hidden">
+            <table id="tbgrid" data-bind="datagrid:grid" style="scrollbar-darkshadow-color: #f00; height: 100%">
+                <thead>
+                    <tr>
+                        <th field="BillNo" hidden="hidden" sortable="true" align="center" width="90">流水号</th>
+                        <th field="Address" @Html.HideColumn(Cols, "Address") sortable="true" align="center" width="100">所在道路名称</th>
+                        <th field="AdministrativeArea" @Html.HideColumn(Cols, "AdministrativeArea") sortable="true" align="center" width="100" formatter="com.AdministrativeArea">所在区域</th>
+                        <th field="IdentificationCode" @Html.HideColumn(Cols, "IdentificationCode") sortable="true" align="center" width="100">管渠标识码</th>
+                        <th field="Start_stopPoint" @Html.HideColumn(Cols, "Start_stopPoint") sortable="true" align="center" width="100">起止点</th>
+                        <th field="Category" @Html.HideColumn(Cols, "Category") sortable="true" align="center" width="100" formatter="com.Category">管渠类别</th>
+                        <th field="GrooveType" @Html.HideColumn(Cols, "GrooveType") sortable="true" align="center" width="100" formatter="com.GrooveType">渠道类型</th>
+                        <th field="Length" @Html.HideColumn(Cols, "Length") sortable="true" align="center" width="100">管渠长度(米)</th>
+                        <th field="StartCode" @Html.HideColumn(Cols, "StartCode") sortable="true" align="center" width="100">起点编码</th>
+                        <th field="StopCode" @Html.HideColumn(Cols, "StopCode") sortable="true" align="center" width="100">终点编码</th>
+                        <th field="StartElevation" @Html.HideColumn(Cols, "StartElevation") sortable="true" align="center" width="100">起点管底标高(米)</th>
+                        <th field="StopElevation" @Html.HideColumn(Cols, "StopElevation") sortable="true" align="center" width="100">终点管底标高(米)</th>
+                        <th field="SectionForm" @Html.HideColumn(Cols, "SectionForm") sortable="true" align="center" width="100" formatter="com.SectionForm">断面形式</th>
+                        <th field="Diameter" @Html.HideColumn(Cols, "Diameter") sortable="true" align="center" width="100" formatter="convert_format">管径(毫米)</th>
+                        <th field="Material" @Html.HideColumn(Cols, "Material") sortable="true" align="center" width="100" formatter="com.Material">管渠材质</th>
+                        <th field="PressureType" @Html.HideColumn(Cols, "PressureType") sortable="true" align="center" width="100" formatter="com.PressureType">压力类型</th>
+                        <th field="Slope" @Html.HideColumn(Cols, "Slope") sortable="true" align="center" width="100" formatter=" convert_Slope">管道坡度</th>
+                        <th field="OwnershipUnit" @Html.HideColumn(Cols, "OwnershipUnit") sortable="true" align="center" width="100">权属单位</th>
+                        <th field="Type" @Html.HideColumn(Cols, "Type") sortable="true" align="center" width="100" formatter="com.Type">类型</th>
+                        <th field="FacilityStatus" @Html.HideColumn(Cols, "FacilityStatus") sortable="true" align="center" width="100" formatter="com.FacilityStatus">设施状态</th>
+                    
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div title="地图查看" id="mapwin">
+        <div style="height: 100%;width:100%; overflow-y: hidden; overflow-x: hidden">
+            <div id="MyMapDiv" class="MapClass" style="height: 800px"></div>
+        </div>
+    </div>
+</div>
+
+
+

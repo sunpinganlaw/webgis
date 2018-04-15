@@ -1,0 +1,225 @@
+﻿@{
+    ViewBag.Title = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section scripts{
+        <script src="~/Areas/Mms/ViewModels/mms.com.js"></script>
+        <script src="~/Areas/Mms/ViewModels/mms.viewModel.edit.js"></script>
+<script type="text/javascript" src="~/Content/arcgis/jsapi_vsdoc12_v38.js"></script>
+<link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/dijit/themes/tundra/tundra.css" />
+<link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/esri/css/esri.css" />
+<script type="text/javascript"
+        src="http://10.144.1.21/arcgis/library/3.17/jsapi/init.js"></script>
+        <script type="text/javascript">
+            var viewModel = function (data) {
+                var self = this;
+                mms.viewModel.edit.apply(this, arguments);
+            };
+            var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+            ko.bindingViewModel(new viewModel(data));
+
+            var sms;
+            var infoTemplate;
+            var MyMap;
+            var graphic;
+            var MyTiledMapServiceLayer;
+            showmap();
+
+            function showmap()
+            {
+          
+                dojo.require("esri.map");
+                require([
+                            "dojo/dom", "dojo/on",
+                            "esri/map", "esri/layers/GraphicsLayer", "esri/geometry/Point","esri/symbols/SimpleMarkerSymbol", "esri/symbols/PictureMarkerSymbol",
+                            "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/Color", "esri/InfoTemplate","esri/SpatialReference", 
+                            "dojo/domReady!"],
+                        function (dom, on, Map, GraphicsLayer, Point,
+                                  SimpleMarkerSymbol,  PictureMarkerSymbol, SimpleLineSymbol,Graphic, Color) {
+                            //var MyTiledMapServiceLayer = new esri.layers.ArcGISTiledMapServiceLayer ("http://www.arcgisonline.cn/ArcGIS/rest/services/ChinaOnlineCommunity/MapServer");
+                    
+                            MyTiledMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州底图1124/MapServer");
+                            MyMapDiv.innerHTML="";
+                            MyMap  = new esri.Map("MyMapDiv",  {extent: new esri.geometry.Extent({xmin:502975.0245478001,ymin:3789483.8053802885,xmax:538055.4814522,ymax:3803447.8707500007,spatialReference:{wkid:2436}})
+                            });
+                            MyMap.addLayer(MyTiledMapServiceLayer);
+                            graphicsLayer = new GraphicsLayer();
+                            sms =  new PictureMarkerSymbol({
+                                "url":"/images/Pumpstation.png",
+                                "height":15,
+                                "width":15,
+                                "type":"esriPMS",
+                                "angle": -30,
+                                "color": [255,255,255,64]
+                            });
+                 
+                            infoTemplate = new esri.InfoTemplate();
+                          
+
+                                var Category = utils.CovValueToText(data.form.Category,data.dataSource.Category);
+                                var AdministrativeArea = utils.CovValueToText(data.form.AdministrativeArea,data.dataSource.AdministrativeArea);
+                                var FacilityStatus = utils.CovValueToText(data.form.FacilityStatus,data.dataSource.FacilityStatus);
+
+                                var IdentificationCode=data.form.IdentificationCode;
+                                var Name=data.form.Name;
+                                var PumpNumber=data.form.PumpNumber;
+                                var RainwaterCapacity=data.form.RainwaterCapacity;
+                                var SewageCapacity=data.form.SewageCapacity;
+                                var MinimumWaterLevel=data.form.MinimumWaterLevel;
+                                var NurmalWaterLevel=data.form.NurmalWaterLevel;
+                                var AlarmWaterLevel=data.form.AlarmWaterLevel;
+                                var AreaCovered=data.form.AreaCovered;
+                                var ServiceScope=data.form.ServiceScope;
+                                var ServiceArea=data.form.ServiceArea;
+                                var RainwaterCapacityNow=data.form.RainwaterCapacityNow;
+                                var SewageCapacityNow=data.form.SewageCapacityNow;
+                                var StormPeriod=data.form.StormPeriod;
+                                var PowerSupply=data.form.PowerSupply;
+                                var InstalledCapacity=data.form.InstalledCapacity;
+
+                                var DischargeCode=data.form.DischargeCode;
+                                var FrontPoolLength=data.form.FrontPoolLength;
+                                var FrontPoolWidth=data.form.FrontPoolWidth;
+                                var FrontPoolDepth=data.form.FrontPoolDepth;
+
+                                var point = new Point(data.form.OrgY, data.form.OrgX);
+                                var attr = {"Category":Category,"AdministrativeArea":AdministrativeArea,"Name":Name,"PumpNumber":PumpNumber,"RainwaterCapacity":RainwaterCapacity,
+                                    "SewageCapacity":SewageCapacity,"MinimumWaterLevel":MinimumWaterLevel,"NurmalWaterLevel":NurmalWaterLevel,"AlarmWaterLevel":AlarmWaterLevel,"AreaCovered":AreaCovered,"ServiceScope":ServiceScope,
+                            
+                                    "ServiceArea":ServiceArea,"RainwaterCapacityNow":RainwaterCapacityNow,"SewageCapacityNow":SewageCapacityNow,"StormPeriod":StormPeriod,"PowerSupply":PowerSupply,"InstalledCapacity":InstalledCapacity,
+                                    "DischargeCode":DischargeCode,"FrontPoolLength":FrontPoolLength,"FrontPoolWidth":FrontPoolWidth,"FrontPoolDepth":FrontPoolDepth,"IdentificationCode":IdentificationCode };
+
+                                var content = "<b>泵站类别:</b>&nbsp${Category}&nbsp&nbsp<br>"
+                                             + "<b>泵站名称:</b>&nbsp${Name}&nbsp&nbsp<br>"
+                                             + "<b>水泵台数:</b>&nbsp${PumpNumber}&nbsp&nbsp<br>"
+                                             + "<b>设计排水能力(m³/s):</b>&nbsp${RainwaterCapacity}&nbsp&nbsp<br>"
+                                             + "<b>控制水位(米):</b>&nbsp${NurmalWaterLevel}&nbsp&nbsp<br>"
+                                             + "<b>服务范围:</b>&nbsp${ServiceScope}&nbsp&nbsp<br>"
+                                             + "<b>装机容量:</b>&nbsp${InstalledCapacity}&nbsp&nbsp<br>"
+                                             + "<b>前池深(米):</b>&nbsp${FrontPoolDepth}&nbsp&nbsp<br>"
+                                infoTemplate.setTitle("泵站编号:"+"${IdentificationCode}");
+                                infoTemplate.setContent(content);
+                                graphic = new esri.Graphic(point, sms, attr, infoTemplate);
+                                graphicsLayer.add(graphic);
+                         
+                            MyMap.resize();
+                            MyMap.addLayer(graphicsLayer);
+                            MyMap.centerAt(new Point(data.form.OrgY, data.form.OrgX),graphicsLayer);  
+                        }
+                 )
+            }
+
+        </script>
+}
+
+    <div class="z-toolbar">
+        <a id="a_save" href="#" plain="true" class="easyui-linkbutton" icon="icon-save" data-bind="click:saveClick,linkbuttonDisable:readonly" title="保存">保存</a>
+        <a id="a_undo" href="#" plain="true" class="easyui-linkbutton" icon="icon-undo" data-bind="click:rejectClick,linkbuttonDisable:readonly" title="撤消">撤消</a>
+        <a id="a_audit" href="#" plain="true" class="easyui-linkbutton" icon="icon-user-accept" data-bind="click:auditClick,easyuiLinkbutton:approveButton"  title="审核">审核</a>
+        <a id="a_printer" href="#" plain="true" class="easyui-linkbutton" icon="icon-printer" title="打印" data-bind="click:printClick">打印</a>
+        <div class="datagrid-btn-separator"></div>
+        <a id="a_other" href="#" class="easyui-splitbutton" data-options="menu:'#divother',iconCls:'icon-application_go'" title="其他">其他</a>
+        <div class="datagrid-btn-separator"></div>
+        <a id="a_first" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_first" data-bind="click:firstClick,linkbuttonEnable:scrollKeys.firstEnable" title="第一条"></a> 
+        <a id="a_previous" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_previous" data-bind="click:previousClick,linkbuttonEnable:scrollKeys.previousEnable" title="上一条"></a> 
+        <a id="a_next" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_next" data-bind="click:nextClick,linkbuttonEnable:scrollKeys.nextEnable" title="下一条"></a> 
+        <a id="a_last" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_last" data-bind="click:lastClick,linkbuttonEnable:scrollKeys.lastEnable" title="最后一条"></a> 
+    </div>
+
+ 
+
+    <div id="master" class="container_12" data-bind="inputwidth:0.9">
+    <div class="grid_1 lbl">信息编号</div>
+    <div class="grid_3 val"><input type="text" id="BillNo" name="BillNo" data-bind="value:form.BillNo,readOnly:true" class="z-txt readonly" /></div>
+    <div class="grid_1 lbl">所在道路名称</div>
+    <div class="grid_3 val"><input type="text" id="Address" name="Address" data-bind="value:form.Address" class="z-txt " /></div>
+    <div class="grid_1 lbl">所在区域</div>
+    <div class="grid_3 val "><input type="text" data-bind="comboboxValue:form.AdministrativeArea,datasource:dataSource.AdministrativeArea,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl">泵站类别</div>
+    <div class="grid_3 val"><input type="text" data-bind="comboboxValue:form.Category,datasource:dataSource.Category,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">泵站标识码</div>
+    <div class="grid_3 val"><input type="text" id="IdentificationCode" name="IdentificationCode" data-bind="value:form.IdentificationCode" class="z-txt " /></div>
+    <div class="grid_1 lbl">泵站名称</div>
+    <div class="grid_3 val"><input type="text" id="Name" name="Name" data-bind="value:form.Name" class="z-txt " /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl ">水泵台数</div>
+    <div class="grid_3 val"><input type="text" id="PumpNumber" name="PumpNumber" data-bind="value:form.PumpNumber" class="z-txt" /></div>
+    <div class="grid_1 lbl">设计雨水排水能力(立方米/秒)</div>
+    <div class="grid_3 val"><input type="text" id="RainwaterCapacity" name="RainwaterCapacity" data-bind="value:form.RainwaterCapacity" class="z-txt" /></div>
+    <div class="grid_1 lbl">设计污水排水能力(立方米/秒)</div>
+    <div class="grid_3 val "><input type="text" id="SewageCapacity" name="SewageCapacity" data-bind="value:form.SewageCapacity" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+
+    <div class="grid_1 lbl">最低控制水位(米)</div>
+    <div class="grid_3 val"><input type="text" id="MinimumWaterLevel" name="MinimumWaterLevel" data-bind="value:form.MinimumWaterLevel" class="z-txt" /></div>
+    <div class="grid_1 lbl">控制水位(米)</div>
+    <div class="grid_3 val"><input type="text" id="NurmalWaterLevel" name="NurmalWaterLevel" data-bind="value:form.NurmalWaterLevel" class="z-txt" /></div>
+    <div class="grid_1 lbl">警戒水位(米)</div>
+    <div class="grid_3 val "><input type="text" id="AlarmWaterLevel" name="AlarmWaterLevel" data-bind="value:form.AlarmWaterLevel" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+
+    <div class="grid_1 lbl">占地面积(平方米)</div>
+    <div class="grid_3 val"><input type="text" id="AreaCovered" name="AreaCovered" data-bind="value:form.AreaCovered" class="z-txt" /></div>
+    <div class="grid_1 lbl">服务范围</div>
+    <div class="grid_3 val"><input type="text" id="ServiceScope" name="ServiceScope" data-bind="value:form.ServiceScope" class="z-txt" /></div>
+    <div class="grid_1 lbl">服务面积(公顷)</div>
+    <div class="grid_3 val "><input type="text" id="ServiceArea" name="ServiceArea" data-bind="value:form.ServiceArea" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl ">现有雨水排水能力(立方米/秒)</div>
+    <div class="grid_3 val"><input type="text" id="RainwaterCapacityNow" name="RainwaterCapacityNow" data-bind="value:form.RainwaterCapacityNow" class="z-txt" /></div>
+    <div class="grid_1 lbl">现有污水排水能力(立方米/秒)</div>
+    <div class="grid_3 val"><input type="text" id="SewageCapacityNow" name="SewageCapacityNow" data-bind="value:form.SewageCapacityNow" class="z-txt" /></div>
+    <div class="grid_1 lbl">暴雨重现期</div>
+    <div class="grid_3 val "><input type="text" id="StormPeriod" name="StormPeriod" data-bind="value:form.StormPeriod" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+
+
+    <div class="grid_1 lbl">供电部门</div>
+    <div class="grid_3 val"><input type="text" id="PowerSupply" name="PowerSupply" data-bind="value:form.PowerSupply" class="z-txt" /></div>
+    <div class="grid_1 lbl">装机容量</div>
+    <div class="grid_3 val"><input type="text" id="InstalledCapacity" name="InstalledCapacity" data-bind="value:form.InstalledCapacity" class="z-txt" /></div>
+    <div class="grid_1 lbl">排放口编码</div>
+    <div class="grid_3 val "><input type="text" id="DischargeCode" name="DischargeCode" data-bind="value:form.DischargeCode" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl">前池长度(米)</div>
+    <div class="grid_3 val"><input type="text" id="FrontPoolLength" name="FrontPoolLength" data-bind="value:form.FrontPoolLength" class="z-txt" /></div>
+    <div class="grid_1 lbl">前池宽度(米)</div>
+    <div class="grid_3 val"><input type="text" id="FrontPoolWidth" name="FrontPoolWidth" data-bind="value:form.FrontPoolWidth" class="z-txt" /></div>
+    <div class="grid_1 lbl">前池深度(米)</div>
+    <div class="grid_3 val "><input type="text" id="FrontPoolDepth" name="FrontPoolDepth" data-bind="value:form.FrontPoolDepth" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl">设施状态</div>
+    <div class="grid_3 val"><input type="text" data-bind="comboboxValue:form.FacilityStatus,datasource:dataSource.FacilityStatus,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">经度</div>
+    <div class="grid_3 val"><input type="text" id="OrgY" name="OrgY" data-bind="value:form.OrgY" class="z-txt" /></div>
+    <div class="grid_1 lbl">纬度</div>
+    <div class="grid_3 val "><input type="text" id="OrgX" name="OrgX" data-bind="value:form.OrgX" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+</div>
+<div title="地图查看" id="mapwin">
+
+    <div id="MyMapDiv" class="MapClass" style="height: 800px"></div>
+
+</div>

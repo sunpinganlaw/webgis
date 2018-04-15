@@ -1,0 +1,201 @@
+﻿@{
+    ViewBag.Title = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section scripts{
+        <script src="~/Areas/Mms/ViewModels/mms.com.js"></script>
+        <script src="~/Areas/Mms/ViewModels/mms.viewModel.edit.js"></script>
+<script type="text/javascript" src="~/Content/arcgis/jsapi_vsdoc12_v38.js"></script>
+<link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/dijit/themes/tundra/tundra.css" />
+<link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/esri/css/esri.css" />
+<script type="text/javascript"
+        src="http://10.144.1.21/arcgis/library/3.17/jsapi/init.js"></script>
+        <script type="text/javascript">
+            var viewModel = function (data) {
+                var self = this;
+                mms.viewModel.edit.apply(this, arguments);
+            };
+            var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+            ko.bindingViewModel(new viewModel(data));
+
+            var sms;
+            var infoTemplate;
+            var MyMap;
+            var graphic;
+            var MyTiledMapServiceLayer; 
+            showmap();
+
+
+
+            function showmap()
+            {
+                dojo.require("esri.map");
+                require([
+                            "dojo/dom", "dojo/on",
+                            "esri/map", "esri/layers/GraphicsLayer", "esri/geometry/Point","esri/symbols/SimpleMarkerSymbol", "esri/symbols/PictureMarkerSymbol",
+                            "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/Color", "esri/InfoTemplate","esri/SpatialReference", 
+                            "dojo/domReady!"],
+                        function (dom, on, Map, GraphicsLayer, Point,
+                                  SimpleMarkerSymbol,  PictureMarkerSymbol, SimpleLineSymbol,Graphic, Color) {
+                            //var MyTiledMapServiceLayer = new esri.layers.ArcGISTiledMapServiceLayer ("http://www.arcgisonline.cn/ArcGIS/rest/services/ChinaOnlineCommunity/MapServer");
+                            MyTiledMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州底图1124/MapServer");
+                            MyMapDiv.innerHTML="";
+                            MyMap  = new esri.Map("MyMapDiv",  {extent: new esri.geometry.Extent({xmin:502975.0245478001,ymin:3789483.8053802885,xmax:538055.4814522,ymax:3803447.8707500007,spatialReference:{wkid:2436}})
+                            });
+                            MyMap.addLayer(MyTiledMapServiceLayer);
+                            graphicsLayer = new GraphicsLayer();
+                            //sms = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 20,
+                            //              new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,
+                            //                      new Color([255, 0, 0]), 1),
+                            //              new Color([0, 255, 0, 0.25]));
+
+
+                            sms =  new PictureMarkerSymbol({
+                                "url":"/images/Rainwaterport.png",
+                                "height":15,
+                                "width":15,
+                                "type":"esriPMS",
+                                "angle": -30,
+                                "color": [255,255,255,64]
+                            });
+                 
+                            infoTemplate = new esri.InfoTemplate();
+                   
+                            var Form = utils.CovValueToText(data.form.Form,data.dataSource.Form);
+                            var AdministrativeArea = utils.CovValueToText(data.form.AdministrativeArea,data.dataSource.AdministrativeArea);
+                            var GarbageInterceptionDevice = utils.CovValueToText(data.form.GarbageInterceptionDevice,data.dataSource.GarbageInterceptionDevice);
+                            var DeodorizationDevice = utils.CovValueToText(data.form.DeodorizationDevice,data.dataSource.DeodorizationDevice);
+                            var RainwaterInterceptionDevice = utils.CovValueToText(data.form.RainwaterInterceptionDevice,data.dataSource.RainwaterInterceptionDevice);
+                            var RainGrateMaterial=utils.CovValueToText(data.form.RainGrateMaterial,data.dataSource.RainGrateMaterial);
+                            var FacilityStatus = utils.CovValueToText(data.form.FacilityStatus,data.dataSource.FacilityStatus);
+
+                            var MaximumDepth=data.form.MaximumDepth;
+                            var GroundElevation=data.form.GroundElevation;
+                            var MaximumFlowCapacity=data.form.MaximumFlowCapacity;
+                            var Width=data.form.Width;
+                            var Length=data.form.Length;
+                       
+                            var RainGrateLength=data.form.RainGrateLength;
+                            var RainGrateWidth=data.form.RainGrateWidth;
+                            var RetentionCapacity=data.form.RetentionCapacity;
+                            var IdentificationCode=data.form.IdentificationCode;
+
+                            var point = new Point(data.form.OrgY, data.form.OrgX);
+                            var attr = {"Form":Form,"AdministrativeArea":AdministrativeArea,"GarbageInterceptionDevice":GarbageInterceptionDevice,"DeodorizationDevice":DeodorizationDevice,"RainwaterInterceptionDevice":RainwaterInterceptionDevice,
+                                "FacilityStatus":FacilityStatus,"MaximumDepth":MaximumDepth,"GroundElevation":GroundElevation,"MaximumFlowCapacity":MaximumFlowCapacity,
+                            
+                                "Width":Width,"Length":Length,"RainGrateMaterial":RainGrateMaterial,"RainGrateLength":RainGrateLength,"RainGrateWidth":RainGrateWidth,"RetentionCapacity":RetentionCapacity,"IdentificationCode":IdentificationCode };
+
+                       
+                            var content = "<b>收水井形式:</b>&nbsp${Form}&nbsp&nbsp<br>"
+                                            + "<b>所属区域:</b>&nbsp${AdministrativeArea}&nbsp&nbsp<br>"
+                                            + "<b>垃圾拦截:</b>&nbsp${GarbageInterceptionDevice}&nbsp&nbsp<br>"
+                                            + "<b>防臭装置:</b>&nbsp${DeodorizationDevice}&nbsp&nbsp<br>"
+                                            + "<b>雨水截留:</b>&nbsp${FacilityStatus}&nbsp&nbsp<br>"
+                                            + "<b>最大深度(米):</b>&nbsp${MaximumDepth}&nbsp&nbsp<br>"
+                                            + "<b>地表高程(米):</b>&nbsp${GroundElevation}&nbsp&nbsp<br>"
+                                            + "<b>最大过流能力(升/秒):</b>&nbsp${MaximumFlowCapacity}&nbsp&nbsp<br>"
+                                            + "<b>收水井宽度(米):</b>&nbsp${Width}&nbsp&nbsp<br>"
+                                            + "<b>收水井长度(米):</b>&nbsp${Length}&nbsp&nbsp<br>"
+                                            + "<b>雨水篦长度(米):</b>&nbsp${RainGrateLength}&nbsp&nbsp<br>"
+                                            + "<b>雨水篦宽度(米):</b>&nbsp${RainGrateWidth}&nbsp&nbsp<br>"
+                                            + "<b>初期雨水截留能力(立方米):</b>&nbsp${RetentionCapacity}&nbsp&nbsp<br>"
+                                            + "<b>雨水篦材质:</b>&nbsp${RainGrateMaterial}&nbsp&nbsp<br>"
+                            infoTemplate.setTitle("收水井标识码："+"${IdentificationCode}");
+                            infoTemplate.setContent(content);
+                            graphic = new esri.Graphic(point, sms, attr, infoTemplate);
+                            graphicsLayer.add(graphic);
+                           
+                            MyMap.resize();
+                            MyMap.addLayer(graphicsLayer);
+                            MyMap.centerAt(new Point(data.form.OrgY, data.form.OrgX),graphicsLayer);  
+                        }
+                 )
+            }
+
+
+
+        </script>
+}
+
+    <div class="z-toolbar">
+        <a id="a_save" href="#" plain="true" class="easyui-linkbutton" icon="icon-save" data-bind="click:saveClick,linkbuttonDisable:readonly" title="保存">保存</a>
+        <a id="a_undo" href="#" plain="true" class="easyui-linkbutton" icon="icon-undo" data-bind="click:rejectClick,linkbuttonDisable:readonly" title="撤消">撤消</a>
+        <a id="a_audit" href="#" plain="true" class="easyui-linkbutton" icon="icon-user-accept" data-bind="click:auditClick,easyuiLinkbutton:approveButton"  title="审核">审核</a>
+        <a id="a_printer" href="#" plain="true" class="easyui-linkbutton" icon="icon-printer" title="打印" data-bind="click:printClick">打印</a>
+        <div class="datagrid-btn-separator"></div>
+        <a id="a_other" href="#" class="easyui-splitbutton" data-options="menu:'#divother',iconCls:'icon-application_go'" title="其他">其他</a>
+        <div class="datagrid-btn-separator"></div>
+        <a id="a_first" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_first" data-bind="click:firstClick,linkbuttonEnable:scrollKeys.firstEnable" title="第一条"></a> 
+        <a id="a_previous" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_previous" data-bind="click:previousClick,linkbuttonEnable:scrollKeys.previousEnable" title="上一条"></a> 
+        <a id="a_next" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_next" data-bind="click:nextClick,linkbuttonEnable:scrollKeys.nextEnable" title="下一条"></a> 
+        <a id="a_last" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_last" data-bind="click:lastClick,linkbuttonEnable:scrollKeys.lastEnable" title="最后一条"></a> 
+    </div>
+
+ 
+
+    <div id="master" class="container_12" data-bind="inputwidth:0.9">
+    <div class="grid_1 lbl">信息编号</div>
+    <div class="grid_3 val"><input type="text" id="BillNo" name="BillNo" data-bind="value:form.BillNo,readOnly:true" class="z-txt readonly" /></div>
+    <div class="grid_1 lbl">所在道路名称</div>
+    <div class="grid_3 val"><input type="text" id="Address" name="Address" data-bind="value:form.Address" class="z-txt " /></div>
+    <div class="grid_1 lbl">所在区域</div>
+    <div class="grid_3 val "><input type="text" data-bind="comboboxValue:form.AdministrativeArea,datasource:dataSource.AdministrativeArea,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl">收水井形式</div>
+    <div class="grid_3 val"><input type="text" data-bind="comboboxValue:form.Form,datasource:dataSource.Form,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">最大深度(米)</div>
+    <div class="grid_3 val"><input type="text" id="MaximumDepth" name="MaximumDepth" data-bind="value:form.MaximumDepth" class="z-txt " /></div>
+    <div class="grid_1 lbl">地表高程(米)</div>
+    <div class="grid_3 val"><input type="text" id="GroundElevation" name="GroundElevation" data-bind="value:form.GroundElevation" class="z-txt " /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl ">最大过流能力(升/秒)</div>
+    <div class="grid_3 val"><input type="text" id="MaximumFlowCapacity" name="MaximumFlowCapacity" data-bind="value:form.MaximumFlowCapacity" class="z-txt" /></div>
+    <div class="grid_1 lbl">收水井宽度(米)</div>
+    <div class="grid_3 val"><input type="text" id="Width" name="Width" data-bind="value:form.Width" class="z-txt" /></div>
+    <div class="grid_1 lbl">收水井长度(米)</div>
+    <div class="grid_3 val "><input type="text" id="Length" name="Length" data-bind="value:form.Length" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+
+    <div class="grid_1 lbl">雨水篦材质</div>
+    @*<div class="grid_3 val"><input type="text" id="RainGrateMaterial" name="RainGrateMaterial" data-bind="value:form.RainGrateMaterial" class="z-txt" /></div>*@
+    <div class="grid_3 val"><input type="text" data-bind="comboboxValue:form.RainGrateMaterial,datasource:dataSource.RainGrateMaterial,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">雨水篦长度(米)</div>
+    <div class="grid_3 val"><input type="text" id="RainGrateLength" name="RainGrateLength" data-bind="value:form.RainGrateLength" class="z-txt" /></div>
+    <div class="grid_1 lbl">雨水篦宽度(米)</div>
+    <div class="grid_3 val "><input type="text" id="RainGrateWidth" name="RainGrateWidth" data-bind="value:form.RainGrateWidth" class="z-txt" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl ">装备垃圾拦截装置</div>
+    <div class="grid_3 val"><input type="text" data-bind="comboboxValue:form.GarbageInterceptionDevice,datasource:dataSource.GarbageInterceptionDevice,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">装备防臭装置</div>
+    <div class="grid_3 val"><input type="text" data-bind="comboboxValue:form.DeodorizationDevice,datasource:dataSource.DeodorizationDevice,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">装备初期雨水截留装置(立方米)</div>
+    <div class="grid_3 val "><input type="text" data-bind="comboboxValue:form.RainwaterInterceptionDevice,datasource:dataSource.RainwaterInterceptionDevice,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl">设施状态</div>
+    <div class="grid_3 val"><input type="text" data-bind="comboboxValue:form.FacilityStatus,datasource:dataSource.FacilityStatus,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">经度</div>
+    <div class="grid_3 val"><input type="text" id="OrgY" name="OrgY" data-bind="value:form.OrgY" class="z-txt" /></div>
+    <div class="grid_1 lbl">纬度</div>
+    <div class="grid_3 val "><input type="text" id="OrgX" name="OrgX" data-bind="value:form.OrgX" class="z-txt" /></div>
+
+    <div class="clear"></div>
+</div>
+<div title="地图查看" id="mapwin">
+
+    <div id="MyMapDiv" class="MapClass" style="height: 800px"></div>
+
+</div>

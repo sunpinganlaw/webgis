@@ -1,0 +1,943 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>Info Window Lite</title>
+    <style>
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #mapDiv {
+            width: 100%;
+            height: 100%;
+        }
+
+        #showtype {
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            width: 350px;
+            height: 900px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            text-align: center;
+            line-height: 30px;
+            padding: 10px;
+        }
+
+        #mapCheckbox {
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            width: 400px;
+            height:80px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            text-align: center;
+            line-height: 30px;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+
+
+<link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/dijit/themes/tundra/tundra.css" />
+<link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/esri/css/esri.css" />
+<script type="text/javascript"
+        src="http://10.144.1.21/arcgis/library/3.17/jsapi/init.js"></script>
+<script type="text/javascript" src="~/Content/js/jquery-easyui-1.3.2/jquery-1.8.0.min.js"></script>
+<script type="text/javascript">
+
+      dojo.require("dijit.layout.BorderContainer");  
+      dojo.require("dijit.layout.ContentPane");  
+      dojo.require("esri.map");  
+      dojo.require("esri.dijit.Measurement");  
+      dojo.require("esri.dijit.Scalebar");  
+	  
+    var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+    var selecteditem1 = 0
+    var selecteditem2 = 0;
+    var selecteditem3 = 0;
+    var selecteditem4 = 0;
+    var selecteditem5 = 0;  
+    var selecteditem6 = 0;  
+    var selecteditem7 = 0;  
+    var map;  
+    var tb;  
+    var measurement;
+	
+	
+  
+     
+  
+     function init() {  
+     
+      esri.config.defaults.geometryService = new esri.tasks.GeometryService("http://10.144.1.21:6080/arcgis/rest/services/Utilities/Geometry/GeometryServer");
+            
+      var MyTiledMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/backgroundmap/MapServer");
+      var MyAdministrativeMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州市行政区域/MapServer");
+            map = new esri.Map("mapDiv");
+
+            map.addLayer(MyTiledMapServiceLayer);
+            map.addLayer(MyAdministrativeMapServiceLayer);
+      
+        //dojo.connect(map, 'onLoad', function(map) {  
+        //  initToolbar(map);  
+        //});  
+      }  
+  
+      function initToolbar(mymap) {  
+        var pms = new esri.symbol.PictureMarkerSymbol("/images/InspectionWell.png",24,24);  
+        pms.setOffset(9,11);  
+        var sls = new esri.symbol.SimpleLineSymbol(  
+            esri.symbol.SimpleLineSymbol.STYLE_DOT,  
+            new dojo.Color([255,0,0,.55]),  
+            4  
+        );  
+
+        if(dijit.byId("measurementDiv")){
+            //alert('measurementDiv');
+            dijit.byId("measurementDiv").destroy(); 
+           measurement = new esri.dijit.Measurement({  
+                map: mymap,  
+                lineSymbol:sls, 
+                pointSymbol:pms 
+           }, dojo.byId('measurementDiv'));
+           measurement.startup(); 
+           measurement.setTool("area",true);
+
+        }else
+        {
+
+           measurement = new esri.dijit.Measurement({  
+                map: mymap,  
+                lineSymbol:sls, 
+                pointSymbol:pms 
+            }, dojo.byId('measurementDiv'));  
+            measurement.startup(); 
+            measurement.setTool("area",true);
+
+        }
+       
+      }  
+      dojo.ready(init);  
+	
+	
+	
+    $(function () {
+
+        $('#mapCheckbox').hide();
+        $('#TABLERR').hide();
+     
+      
+    });
+
+
+    function confirm() {
+
+        $('#mapCheckbox').hide();
+
+        $('#showtype').show();
+
+        if ($('#item1').attr('checked')) {
+            selecteditem1 = $('input[name="item1"]:checked').val();
+
+        } else {
+
+            selecteditem1 = 0;
+        }
+
+        if ($('#item2').attr('checked')) {
+            selecteditem2 = $('input[name="item2"]:checked').val();
+
+        } else {
+
+            selecteditem2 = 0;
+        }
+
+        if ($('#item3').attr('checked')) {
+            selecteditem3 = $('input[name="item3"]:checked').val();
+
+        } else {
+
+            selecteditem3 = 0;
+        }
+
+        if ($('#item4').attr('checked')) {
+            selecteditem4 = $('input[name="item4"]:checked').val();
+
+        } else {
+
+            selecteditem4 = 0;
+        }
+
+        if ($('#item5').attr('checked')) {
+            selecteditem5 = $('input[name="item5"]:checked').val();
+
+        } else {
+
+            selecteditem5 = 0;
+        }
+
+        if ($('#item6').attr('checked')) {
+            selecteditem6 = $('input[name="item6"]:checked').val();
+
+        } else {
+
+            selecteditem6 = 0;
+        }
+
+        if ($('#item7').attr('checked')) {
+            selecteditem7 = $('input[name="item7"]:checked').val();
+
+        } else {
+
+            selecteditem7 = 0;
+        }
+
+        mapDiv.innerHTML="";
+        refresh();
+
+
+
+    }
+    function select() {
+        $('#showtype').hide();
+        $('#mapCheckbox').show();
+
+    }
+
+
+    //按钮相应函数  
+    function onDrawRect(){  
+        //alert("点击了按钮");  
+        map.disableMapNavigation();  
+        tb.activate(esri.toolbars.Draw.EXTENT);  
+    } 
+	
+	
+	
+
+    function refresh() {
+
+      
+        require([
+        "esri/map",
+         "esri/symbols/SimpleMarkerSymbol",
+            "esri/dijit/InfoWindowLite",
+            "esri/InfoTemplate",
+            "esri/layers/FeatureLayer",
+            "dojo/dom-construct",
+            "esri/toolbars/draw", 
+            "esri/graphic",
+            "esri/tasks/query",
+            "dojo/domReady!"
+           
+        ], function (
+               Map,
+               SimpleMarkerSymbol,  
+              InfoWindowLite,
+              InfoTemplate,
+              FeatureLayer,
+              domConstruct,
+               Graphic,
+               Query
+             ) {
+
+           
+          
+
+            var MyTiledMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/backgroundmap/MapServer");
+            var MyAdministrativeMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州市行政区域/MapServer");
+             map = new esri.Map("mapDiv");
+             map.addLayer(MyTiledMapServiceLayer);
+             map.addLayer(MyAdministrativeMapServiceLayer);
+             esri.config.defaults.geometryService = new esri.tasks.GeometryService("http://10.144.1.21:6080/arcgis/rest/services/Utilities/Geometry/GeometryServer");
+
+            var infoWindow = new InfoWindowLite(null, domConstruct.create("div", null, null, map.root));
+            infoWindow.startup();
+            map.setInfoWindow(infoWindow);
+
+            
+            //map.on("load", drawRect);  
+            function drawRect() {  
+                tb = new esri.toolbars.Draw(map);  
+                tb.on("draw-end", addGraphic);  
+            }  
+            function addGraphic(evt) {  
+                //deactivate the toolbar and clear existing graphics   
+              
+                tb.deactivate();   
+                map.enableMapNavigation();  
+  
+                map.graphics.add(new Graphic(evt.geometry, symbol));  
+  
+                //进行查询  
+                var query = new Query();  
+                query.geometry = evt.geometry;  
+            
+                //featureLayer.queryFeatures(query, selectFeature);  
+
+
+                if (selecteditem1 == 1) {
+                    //alert("discharge");
+                    dischargefeatureLayer.queryFeatures(query, selectFeature_1);  
+
+                }
+                if (selecteditem2 == 2) {
+                    //alert("discharge");
+                    rainwaterfeatureLayer.queryFeatures(query, selectFeature_2);  
+
+                }
+                if (selecteditem3 == 3) {
+                    //alert("discharge");
+                    inspectionfeatureLayer.queryFeatures(query, selectFeature_3);  
+
+                }
+
+                if (selecteditem4 == 4) {
+                    //alert("discharge");
+                    groovefeatureLayer.queryFeatures(query, selectFeature_4);  
+
+                }
+                if (selecteditem5 == 5) {
+                    //alert("discharge");
+                    inspectionfeatureLayer.queryFeatures(query, selectFeature_5);  
+
+                }
+
+
+                if (selecteditem6== 6) {
+                   
+                    getefeatureLayer.queryFeatures(query, selectFeature_6);  
+
+                }
+
+                if (selecteditem7== 7) {
+                    //alert("discharge");
+                    pumpfeatureLayer.queryFeatures(query, selectFeature_7);  
+
+                }
+            }
+            
+            function selectFeature_1(response){  
+                var feature;  
+                var features = response.features;  
+                var inBuffer = [];  
+           
+                for (var i = 0; i < features.length; i++) {  
+                    feature = features[i];  
+                    inBuffer.push(feature.attributes[dischargefeatureLayer.objectIdField]);  
+                }  
+                var query = new Query();  
+                query.objectIds = inBuffer;  
+                //use a fast objectIds selection query (should not need to go to the server)  
+                dischargefeatureLayer.selectFeatures(query, FeatureLayer.SELECTION_NEW, function(results){  
+                    for(var i=0;i<results.length;i++){  
+                        var feature = results[i];  
+                     
+
+
+                        var  tableStr = tableStr + "<tr><td align='center'>" + feature.attributes["OutfallID"] 
+                               + "</td>" + "<td align='center'>" + feature.attributes["Category"] + "</td>"  
+                               + "<td align='center'>" + feature.attributes["Addr"] + "</td>"  
+                           
+                    }
+                    $("#discharge_tb").html(''); 
+                    $("#discharge_tb").html(tableStr);  
+
+
+                     
+                });  
+            }  
+
+            function selectFeature_2(response){  
+                var feature;  
+                var features = response.features;  
+                var inBuffer = [];  
+           
+                for (var i = 0; i < features.length; i++) {  
+                    feature = features[i];  
+                    inBuffer.push(feature.attributes[rainwaterfeatureLayer.objectIdField]);  
+                }  
+                var query = new Query();  
+                query.objectIds = inBuffer;  
+               
+                rainwaterfeatureLayer.selectFeatures(query, FeatureLayer.SELECTION_NEW, function(results){  
+
+                    for(var i=0;i<results.length;i++){  
+                        var feature = results[i];  
+                     
+
+
+                        var  tableStr = tableStr + "<tr><td align='center'>" + feature.attributes["CombID"] 
+                               + "</td>" + "<td align='center'>" + feature.attributes["MaxDepth"] + "</td>"  
+                               + "<td align='center'>" + feature.attributes["Surface_Ele"] + "</td>"  
+                           
+                    }
+                    $("#rainwater_tb").html(''); 
+                    $("#rainwater_tb").html(tableStr);  
+                    
+                });  
+            }  
+            function selectFeature_3(response){  
+                var feature;  
+                var features = response.features;  
+                var inBuffer = [];  
+           
+                for (var i = 0; i < features.length; i++) {  
+                    feature = features[i];  
+                    inBuffer.push(feature.attributes[inspectionfeatureLayer.objectIdField]);  
+                }  
+                var query = new Query();  
+                query.objectIds = inBuffer;  
+                //use a fast objectIds selection query (should not need to go to the server)  
+                inspectionfeatureLayer.selectFeatures(query, FeatureLayer.SELECTION_NEW, function(results){  
+
+
+                    for(var i=0;i<results.length;i++){  
+                        var feature = results[i];  
+                     
+
+
+                        var  tableStr = tableStr + "<tr><td align='center'>" + feature.attributes["NodeID"] 
+                               + "</td>" + "<td align='center'>" + feature.attributes["Junc_Category"] + "</td>"  
+                               + "<td align='center'>" + feature.attributes["Junc_Type"] + "</td>"  
+                           
+                    }
+                    $("#inspection_tb").html(''); 
+                    $("#inspection_tb").html(tableStr);  
+                    
+                });  
+            }  
+
+            function selectFeature_4(response){  
+                //alert('4');
+                var feature;  
+                var features = response.features;  
+                var inBuffer = [];  
+           
+                for (var i = 0; i < features.length; i++) {  
+                    feature = features[i];  
+                    inBuffer.push(feature.attributes[groovefeatureLayer.objectIdField]);  
+                }  
+                var query = new Query();  
+                query.objectIds = inBuffer;  
+                //use a fast objectIds selection query (should not need to go to the server)  
+                groovefeatureLayer.selectFeatures(query, FeatureLayer.SELECTION_NEW, function(results){  
+
+
+                    for(var i=0;i<results.length;i++){  
+                        var feature = results[i];  
+                     
+
+
+                        var  tableStr = tableStr + "<tr><td align='center'>" + feature.attributes["ConduitID"] 
+                               + "</td>" + "<td align='center'>" + feature.attributes["Conduit_Category"] + "</td>"  
+                               + "<td align='center'>" + feature.attributes["Conduit_Len"] + "</td>"  
+                           
+                    }
+                    $("#groove_tb").html(''); 
+                    $("#groove_tb").html(tableStr);  
+                    
+                });  
+            }  
+
+
+            function selectFeature_5(response){  
+                var feature;  
+                var features = response.features;  
+                var inBuffer = [];  
+           
+                for (var i = 0; i < features.length; i++) {  
+                    feature = features[i];  
+                    inBuffer.push(feature.attributes[pipefeatureLayer.objectIdField]);  
+                }  
+                var query = new Query();  
+                query.objectIds = inBuffer;  
+                //use a fast objectIds selection query (should not need to go to the server)  
+                pipefeatureLayer.selectFeatures(query, FeatureLayer.SELECTION_NEW, function(results){  
+
+
+                    for(var i=0;i<results.length;i++){  
+                        var feature = results[i];  
+                     
+
+
+                        var  tableStr = tableStr + "<tr><td align='center'>" + feature.attributes["PipeID"] 
+                               + "</td>" + "<td align='center'>" + feature.attributes["Pipe_Category"] + "</td>"  
+                               + "<td align='center'>" + feature.attributes["Pipe_Len"] + "</td>"  
+                           
+                    }
+                    $("#pipe_tb").html(''); 
+                    $("#pipe_tb").html(tableStr);  
+                    
+                });  
+            }  
+
+
+
+            function selectFeature_6(response){  
+
+               
+                var feature;  
+                var features = response.features;  
+                var inBuffer = [];  
+           
+                for (var i = 0; i < features.length; i++) {  
+                    feature = features[i];  
+                    inBuffer.push(feature.attributes[getefeatureLayer.objectIdField]);  
+                }  
+                var query = new Query();  
+                query.objectIds = inBuffer;  
+                //use a fast objectIds selection query (should not need to go to the server)  
+                getefeatureLayer.selectFeatures(query, FeatureLayer.SELECTION_NEW, function(results){  
+                   //for(var i=0;i<results.length;i++){  
+                   //    var feature = results[i];  
+                     
+
+
+                   //    var  tableStr = tableStr + "<tr><td align='center'>" + feature.attributes["GateID"] 
+                   //           + "</td>" + "<td align='center'>" + feature.attributes["Control_Type"] + "</td>"  
+                   //           + "<td align='center'>" + feature.attributes["Gate_Materail"] + "</td>"  
+                           
+                   //}
+                   //$("#gate_tb").html(''); 
+                   //$("#gate_tb").html(tableStr);  
+                });  
+            } 
+
+            function selectFeature_7(response){  
+                var feature;  
+                var features = response.features;  
+                var inBuffer = [];  
+           
+                for (var i = 0; i < features.length; i++) {  
+                    feature = features[i];  
+                    inBuffer.push(feature.attributes[pumpfeatureLayer.objectIdField]);  
+                }  
+                var query = new Query();  
+                query.objectIds = inBuffer;  
+                //use a fast objectIds selection query (should not need to go to the server)  
+                pumpfeatureLayer.selectFeatures(query, FeatureLayer.SELECTION_NEW, function(results){  
+                    //for(var i=0;i<results.length;i++){  
+                    //    var feature = results[i];  
+                     
+
+
+                    //    var  tableStr = tableStr + "<tr><td align='center'>" + feature.attributes["PumpStationID"] 
+                    //           + "</td>" + "<td align='center'>" + feature.attributes["PS_Category1"] + "</td>"  
+                    //           + "<td align='center'>" + feature.attributes["PS_Num"] + "</td>"  
+                           
+                    //}
+                    //$("#pump_tb").html(''); 
+                    //$("#pump_tb").html(tableStr);  
+
+
+                    
+                });  
+            } 
+
+
+
+
+            var symbol = new SimpleMarkerSymbol({
+                "color": [255,255,255,64],
+                "size": 12,
+                "angle": -30,
+                "xoffset": 0,
+                "yoffset": 0,
+                "type": "esriSMS",
+                "style": "esriSMSCircle",
+                "outline": {
+                    "color": [0,0,0,255],
+                    "width": 1,
+                    "type": "esriSLS",
+                    "style": "esriSLSSolid"
+                }
+            });
+
+
+           
+
+
+            //var ss= utils.CovValueToText(${Category},data.dataSource.Category)
+
+            var inspectionTemplate = new InfoTemplate();
+            inspectionTemplate.setTitle("<b>检查井标识码 - ${NodeID}</b>");
+            inspectionTemplate.setContent("<b>检查井类别:</b>&nbsp${Junc_Category}&nbsp&nbsp<br>"
+                                         + "<b>所在道路:</b>&nbsp${Lane_Way}&nbsp&nbsp<br>"
+                                         + "<b>检查井类型:</b>&nbsp${Junc_Type}&nbsp&nbsp<br>"
+                                         + "<b>检查井形式:</b>&nbsp${Junc_Style}&nbsp&nbsp<br>"
+                                         + "<b>井盖材质:</b>&nbsp${Cov_Material}&nbsp&nbsp<br>"
+                                         + "<b>井盖形状:</b>&nbsp${Cov_Shape}&nbsp&nbsp<br>"
+                                         + "<b>安装防坠网:</b>&nbsp${Anti_FallingNet}&nbsp&nbsp<br>"
+                                         + "<b>护网状态:</b>&nbsp${Anti_Net_Status}&nbsp&nbsp<br>"
+                                         + "<b>设施状态:</b>&nbsp${Status}&nbsp&nbsp<br>"
+                                         + "<b>检查井井深(米):</b>&nbsp${Depth}&nbsp&nbsp<br>"
+                                         + "<b>地面高程(米):</b>&nbsp${Surface_Ele}&nbsp&nbsp<br>"
+                                         + "<b>井盖尺寸:</b>&nbsp${Cov_Dimen1}&nbsp&nbsp<br>"
+                                        // + "<b>井室类型:</b>&nbsp${Chamber_Type}&nbsp&nbsp<br>"
+                                         + "<b>井室长度(米):</b>&nbsp${Chamber_Length}&nbsp&nbsp<br>"
+                                         + "<b>井室宽度(米):</b>&nbsp${Chamber_Width}&nbsp&nbsp<br>"
+                                         );
+            //add a layer to the map
+            var inspectionfeatureLayer = new FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/featuremap/FeatureServer/2", {
+                mode: FeatureLayer.MODE_ONDEMAND,
+                infoTemplate: inspectionTemplate,
+                //outFields: ["Junc_Category", "Lane_Way", "Depth"]
+                outFields: ["*"]
+            });
+            inspectionfeatureLayer.setSelectionSymbol(symbol);   
+
+
+            var dischargeTemplate = new InfoTemplate();
+            dischargeTemplate.setTitle("<b>排放口标识码 - ${OutfallID}</b>");
+            dischargeTemplate.setContent("<b>排放口类别:</b>&nbsp${Category}&nbsp&nbsp<br>"
+                                         + "<b>排放口地址:</b>&nbsp${Addr}&nbsp&nbsp<br>"
+                                         + "<b>出流形式:</b>&nbsp${OutfallType}&nbsp&nbsp<br>"
+                                         + "<b>是否有拍门:</b>&nbsp${Flap}&nbsp&nbsp<br>"
+                                         + "<b>排放口尺寸(米):</b>&nbsp${OutFall_Size}&nbsp&nbsp<br>"
+                                         + "<b>底部高程(米):</b>&nbsp${BotEle}&nbsp&nbsp<br>"
+                                        // + "<b>设施状态:</b>&nbsp${Status}&nbsp&nbsp<br>"
+                                         );
+            //add a layer to the map
+            var dischargefeatureLayer = new FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/featuremap/FeatureServer/1", {
+                mode: FeatureLayer.MODE_ONDEMAND,
+                infoTemplate: dischargeTemplate,
+                //outFields: ["Junc_Category", "Lane_Way", "Depth"]
+                outFields: ["*"]
+            });
+            dischargefeatureLayer.setSelectionSymbol(symbol);
+
+
+            var rainwaterTemplate = new InfoTemplate();
+            rainwaterTemplate.setTitsle("<b>收水井标识码 - ${CombID}</b>");
+            rainwaterTemplate.setContent("<b>收水井形式:</b>&nbsp${Inlet_Type}&nbsp&nbsp<br>"
+                                          + "<b>所在道路:</b>&nbsp${Lane_Way}&nbsp&nbsp<br>"
+                                          // + "<b>垃圾拦截:</b>&nbsp${Anti_Trash}&nbsp&nbsp<br>"Lane_Way
+                                          // + "<b>防臭装置:</b>&nbsp${Anti_Ordor}&nbsp&nbsp<br>"
+                                          // + "<b>雨水截留:</b>&nbsp${CutAbility}&nbsp&nbsp<br>"
+                                           + "<b>最大深度(米):</b>&nbsp${MaxDepth}&nbsp&nbsp<br>"
+                                           + "<b>地表高程(米):</b>&nbsp${Surface_Ele}&nbsp&nbsp<br>"
+                                           + "<b>最大过流能力(升/秒):</b>&nbsp${Max_Flow}&nbsp&nbsp<br>"
+                                          // + "<b>收水井宽度(米):</b>&nbsp${Width}&nbsp&nbsp<br>"
+                                          // + "<b>收水井长度(米):</b>&nbsp${Length}&nbsp&nbsp<br>"
+                                           + "<b>雨水篦长度(米):</b>&nbsp${GraWidth}&nbsp&nbsp<br>"
+                                           + "<b>雨水篦宽度(米):</b>&nbsp${GraLen}&nbsp&nbsp<br>"
+                                           //+ "<b>初期雨水截留能力(立方米):</b>&nbsp${CutAbility}&nbsp&nbsp<br>"
+                                           //+ "<b>雨水篦材质:</b>&nbsp${GraMaterial}&nbsp&nbsp<br>"
+                                         );
+            //add a layer to the map
+            var rainwaterfeatureLayer = new FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/featuremap/FeatureServer/4", {
+                mode: FeatureLayer.MODE_ONDEMAND,
+                infoTemplate: rainwaterTemplate,
+                //outFields: ["Junc_Category", "Lane_Way", "Depth"]
+                outFields: ["*"]
+            });
+            rainwaterfeatureLayer.setSelectionSymbol(symbol);
+
+
+
+            var grooveTemplate = new InfoTemplate();
+            grooveTemplate.setTitle("<b>排水渠标识码 - ${ConduitID}</b>");
+            grooveTemplate.setContent("<b>所在道路名称:</b>&nbsp${Lane_Way}&nbsp&nbsp<br>"
+                                        + "<b>渠道类别: </b>${Conduit_Category}<br>"
+					                    + "<b>渠道起止: </b>${Start_End}<br>"
+                                        + "<b>渠道长度(米): </b>${Conduit_Len}<br>"
+                                        + "<b>起点标高(米): </b>${In_Elev}<br>"
+                                        + "<b>终点标高(米): </b>${Out_Elev}<br>"
+                                        + "<b>渠道坡度: </b>${Conduit_Slope}<br>"
+                                        + "<b>权属单位: </b>${OnwerUnit}<br>"
+                                         );
+            //add a layer to the map
+            var groovefeatureLayer = new FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/featuremap/FeatureServer/6", {
+                mode: FeatureLayer.MODE_ONDEMAND,
+                infoTemplate: grooveTemplate,
+                //outFields: ["Junc_Category", "Lane_Way", "Depth"]
+                outFields: ["*"]
+            });
+          
+
+
+
+            var pipeTemplate = new InfoTemplate();
+            pipeTemplate.setTitle("<b>排水管标识码 - ${PipeID}</b>");
+            pipeTemplate.setContent("<b>所在道路名称:</b>&nbsp${Lane_Way}&nbsp&nbsp<br>"
+                                        + "<b>管道类别: </b>${Pipe_Category}<br>"
+					                    + "<b>管道起止: </b>${Start_End}<br>"
+                                        + "<b>管道长度(米): </b>${Pipe_Len}<br>"
+                                        + "<b>起点标高(米): </b>${In_Elev}<br>"
+                                        + "<b>终点标高(米): </b>${Out_Elev}<br>"
+                                        + "<b>管道材质: </b>${Material}<br>"
+                                        + "<b>管道坡度: </b>${Pipe_Slope}<br>"
+                                        + "<b>权属单位: </b>${OnwerUnit}<br>"
+                                         );
+            //add a layer to the map
+            var pipefeatureLayer = new FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/featuremap/FeatureServer/5", {
+                mode: FeatureLayer.MODE_ONDEMAND,
+                infoTemplate: pipeTemplate,
+                //outFields: ["Junc_Category", "Lane_Way", "Depth"]
+                outFields: ["*"]
+            });
+            //pipefeatureLayer.setSelectionSymbol(symbol);   
+
+
+            var geteTemplate = new InfoTemplate();
+            geteTemplate.setTitle("<b>闸门标识码 - ${GateID}</b>");
+            geteTemplate.setContent("<b>闸门类别:</b>&nbsp${Category}&nbsp&nbsp<br>"
+                                        + "<b>控制类型:</b>&nbsp${Control_Type}&nbsp&nbsp<br>"
+                                         + "<b>闸门材质:</b>&nbsp${Gate_Materail}&nbsp&nbsp<br>"
+                                         + "<b>闸门高程(米):</b>&nbsp${Top_Ele}&nbsp&nbsp<br>"
+                                         + "<b>闸门净高(米):</b>&nbsp${Height}&nbsp&nbsp<br>"
+                                         + "<b>闸门净宽(米):</b>&nbsp${Width}&nbsp&nbsp<br>"
+                                         + "<b>闸门孔数:</b>&nbsp${Num}&nbsp&nbsp<br>"
+                                         + "<b>设施状态:</b>&nbsp${Status}&nbsp&nbsp<br>"
+                                         );
+            //add a layer to the map
+            var  getefeatureLayer = new FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/featuremap/FeatureServer/3", {
+                mode: FeatureLayer.MODE_ONDEMAND,
+                infoTemplate: geteTemplate,
+                //outFields: ["Junc_Category", "Lane_Way", "Depth"]
+                outFields: ["*"]
+            });
+
+            getefeatureLayer.setSelectionSymbol(symbol);   
+
+
+            var pumpTemplate = new InfoTemplate();
+            pumpTemplate.setTitle("<b>泵站标识码 - ${PumpStationID}</b>");
+            pumpTemplate.setContent("<b>泵站类别:</b>&nbsp${PS_Category1}&nbsp&nbsp<br>"
+                                        + "<b>泵站名称:</b>&nbsp${Name}&nbsp&nbsp<br>"
+                                         + "<b>水泵台数:</b>&nbsp${PS_Num}&nbsp&nbsp<br>"
+                                         + "<b>服务范围:</b>&nbsp${Service_Dis}&nbsp&nbsp<br>"
+                                         + "<b>泵站地址:</b>&nbsp${Addr}&nbsp&nbsp<br>"
+                                       
+                                         );
+            //add a layer to the map
+            var  pumpfeatureLayer = new FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/featuremap/FeatureServer/0", {
+                mode: FeatureLayer.MODE_ONDEMAND,
+                infoTemplate: pumpTemplate,
+                //outFields: ["Junc_Category", "Lane_Way", "Depth"]
+                outFields: ["*"]
+            });
+
+            pumpfeatureLayer.setSelectionSymbol(symbol);   
+
+
+
+            if (selecteditem1 == 1) {
+                //alert("discharge");
+                map.addLayer(dischargefeatureLayer);
+
+            }
+            if (selecteditem2 == 2) {
+                //alert("ddd");
+                //alert("rainwater");
+                map.addLayer(rainwaterfeatureLayer);
+
+            }
+            if (selecteditem3 == 3) {
+                //alert("inspection");
+                map.addLayer(inspectionfeatureLayer);
+
+            }
+            if (selecteditem4 == 4) {
+                //alert("groove");
+                map.addLayer(groovefeatureLayer);
+
+            }
+            if (selecteditem5 == 5) {
+                //alert("pipe")
+                map.addLayer(pipefeatureLayer);
+
+            }
+
+            if (selecteditem6== 6) {
+                //alert("pipe")
+                map.addLayer(getefeatureLayer);
+
+            }
+
+            if (selecteditem7 == 7) {
+                //alert("pipe")
+                map.addLayer(pumpfeatureLayer);
+
+            }
+
+
+            map.infoWindow.resize(220, 200);
+            drawRect();
+
+            //initToolbar(map);
+
+        });
+
+       
+    }
+
+    function createShowingTable(data) {  
+        //获取后台传过来的jsonData,并进行解析  
+  
+        //此处需要让其动态的生成一个table并填充数据  
+        var tableStr = "";  
+        var len = data.workers.length;  
+        for (var i = 0; i < len; i++) {  
+            tableStr = tableStr + "<tr><td align='center'>" + data.workers[i].address  
+                    + "</td>" + "<td align='center'>" + data.workers[i].state + "</td>"  
+                    + "<td align='center'>" + data.cores + "</td>"  
+                    + "<td align='center'>" + data.coresUsed + "</td>"  
+                    + "<td align='center'>" + data.memory + "</td>"  
+                    + "<td align='center'>" + data.memoryUsed + "</td></tr>";  
+        }  
+        //将动态生成的table添加的事先隐藏的div中.  
+        $("#dataTable").html(tableStr);  
+    }  
+
+
+
+
+
+</script>
+
+
+
+
+
+
+
+
+
+<body>
+    <div id="mapDiv" data-dojo-type="dijit.layout.ContentPane"></div>
+
+
+    <div id="showtype">
+        <span style="width: 100%;font-weight: bold;text-align: left">选择要加载的图层信息：</span>
+        <button id="print" onclick='select()'>选择</button>
+        <button id="Extent" onclick="onDrawRect()">区域查询</button>  
+
+            <div class="panel-body" style="width: 100%;height:150px;overflow:auto" id="discharge" >
+                <table id="table-javascript"
+                       class="table table-hover table-responsive ">
+                    <thead>
+                    <th style="text-align: center; vertical-align: middle;">
+                        <div class="th-inner ">排放口标识码</div>
+                    </th>
+                    <th style="text-align: center; vertical-align: middle;">
+                        <div class="th-inner ">排放口类别</div>
+                    </th>
+                    <th style="text-align: center; vertical-align: middle;">
+                        <div class="th-inner ">排放口地址</div>
+                    </th>
+                    
+                    </thead>
+                    <tbody id="discharge_tb"></tbody>
+                </table>
+            </div>
+        <hr style="FILTER: alpha(opacity=100,finishopacity=0,style=1)" width="80%" color=#987cb9 size=3>
+        <div class="panel-body" style="width: 100%;height:150px;overflow:auto" id="inspection" >
+            <table id="table-javascript"
+                   class="table table-hover table-responsive ">
+                <thead>
+                <th style="text-align: center; vertical-align: middle;">
+                    <div class="th-inner ">检查井标识码</div>
+                </th>
+                <th style="text-align: center; vertical-align: middle;">
+                    <div class="th-inner ">检查井类别</div>
+                </th>
+                <th style="text-align: center; vertical-align: middle;">
+                    <div class="th-inner ">检查井类型</div>
+                </th>
+
+                </thead>
+                <tbody id="inspection_tb"></tbody>
+            </table>
+        </div>
+        <hr style="FILTER: alpha(opacity=100,finishopacity=0,style=1)" width="80%" color=#987cb9 size=3>
+        <div class="panel-body" style="width: 100%;height:150px;overflow:auto" id="rainwater">
+            <table id="table-javascript"
+                   class="table table-hover table-responsive ">
+                <thead>
+                <th style="text-align: center; vertical-align: middle;">
+                    <div class="th-inner ">收水井标识码</div>
+                </th>
+                <th style="text-align: center; vertical-align: middle;">
+                    <div class="th-inner ">最大深度</div>
+                </th>
+                <th style="text-align: center; vertical-align: middle;">
+                    <div class="th-inner ">地表高程</div>
+                </th>
+
+                </thead>
+                <tbody id="rainwater_tb"></tbody>
+            </table>
+        </div>
+        <hr style="FILTER: alpha(opacity=100,finishopacity=0,style=1)" width="80%" color=#987cb9 size=3>
+        <div class="panel-body" style="width: 100%;height:150px;overflow:auto" id="groove">
+            <table id="table-javascript"
+                   class="table table-hover table-responsive ">
+                <thead>
+                <th style="text-align: center; vertical-align: middle;">
+                    <div class="th-inner ">排水渠标识码</div>
+                </th>
+                <th style="text-align: center; vertical-align: middle;">
+                    <div class="th-inner ">渠道类别</div>
+                </th>
+                <th style="text-align: center; vertical-align: middle;">
+                    <div class="th-inner ">渠道长度</div>
+                </th>
+
+                </thead>
+                <tbody id="groove_tb"></tbody>
+            </table>
+        </div>
+        <hr style="FILTER: alpha(opacity=100,finishopacity=0,style=1)" width="80%" color=#987cb9 size=3>
+        <div class="panel-body" style="width: 100%;height:150px;overflow:auto" id="pipe">
+            <table id="table-javascript"
+                   class="table table-hover table-responsive ">
+                <thead>
+                <th style="text-align: center; vertical-align: middle;">
+                    <div class="th-inner ">排水管标识码</div>
+                </th>
+                <th style="text-align: center; vertical-align: middle;">
+                    <div class="th-inner ">管道类别</div>
+                </th>
+                <th style="text-align: center; vertical-align: middle;">
+                    <div class="th-inner ">管道长度</div>
+                </th>
+
+                </thead>
+                <tbody id="pipe_tb"></tbody>
+            </table>
+        </div>
+
+
+    </div>
+
+    <div id="mapCheckbox">
+        <label>请先选择要加载的图层：</label>
+        <input type="checkbox" name="item1" value="1" id="item1" />排放口
+        <input type="checkbox" name="item2" value="2" id="item2" />收水井
+        <input type="checkbox" name="item3" value="3" id="item3" />检查井
+        <input type="checkbox" name="item4" value="4" id="item4" />排水渠
+        <input type="checkbox" name="item5" value="5" id="item5" />排水管
+        <input type="checkbox" name="item6" value="6" id="item6" />闸  门
+        <input type="checkbox" name="item7" value="7" id="item7" />泵  站
+        @*<a id ="btn" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-save'" onclick='confirm()'>确 认</a>*@
+        <button id="btn" class=" easyui-linkbutton" data-options="iconCls:'icon-save'" style="width:60px;height:40px;font-size:medium" onclick="confirm()">确 认</button>
+
+</div>
+
+
+
+</body>
+
+</html>

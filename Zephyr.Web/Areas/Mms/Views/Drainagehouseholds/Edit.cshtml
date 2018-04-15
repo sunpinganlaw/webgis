@@ -1,0 +1,60 @@
+﻿@{
+    ViewBag.Title = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section scripts{
+    <script src="~/Areas/Mms/ViewModels/mms.com.js"></script>
+    <script src="~/Areas/Mms/ViewModels/mms.viewModel.edit.js"></script>
+    <script type="text/javascript">
+            var viewModel = function (data) {
+                var self = this;
+                mms.viewModel.edit.apply(this, arguments);
+            };
+            var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+            ko.bindingViewModel(new viewModel(data));
+    </script>
+}
+
+<div class="z-toolbar">
+    <a id="a_save" href="#" plain="true" class="easyui-linkbutton" icon="icon-save" data-bind="click:saveClick,linkbuttonDisable:readonly" title="保存">保存</a>
+    <a id="a_undo" href="#" plain="true" class="easyui-linkbutton" icon="icon-undo" data-bind="click:rejectClick,linkbuttonDisable:readonly" title="撤消">撤消</a>
+    <a id="a_audit" href="#" plain="true" class="easyui-linkbutton" icon="icon-user-accept" data-bind="click:auditClick,easyuiLinkbutton:approveButton" title="审核">审核</a>
+    <a id="a_printer" href="#" plain="true" class="easyui-linkbutton" icon="icon-printer" title="打印" data-bind="click:printClick">打印</a>
+    <div class="datagrid-btn-separator"></div>
+    <a id="a_other" href="#" class="easyui-splitbutton" data-options="menu:'#divother',iconCls:'icon-application_go'" title="其他">其他</a>
+    <div class="datagrid-btn-separator"></div>
+    <a id="a_first" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_first" data-bind="click:firstClick,linkbuttonEnable:scrollKeys.firstEnable" title="第一条"></a>
+    <a id="a_previous" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_previous" data-bind="click:previousClick,linkbuttonEnable:scrollKeys.previousEnable" title="上一条"></a>
+    <a id="a_next" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_next" data-bind="click:nextClick,linkbuttonEnable:scrollKeys.nextEnable" title="下一条"></a>
+    <a id="a_last" href="#" plain="true" class="easyui-linkbutton" icon="icon-resultset_last" data-bind="click:lastClick,linkbuttonEnable:scrollKeys.lastEnable" title="最后一条"></a>
+</div>
+
+
+
+<div id="master" class="container_12" data-bind="inputwidth:0.9">
+    <div class="grid_1 lbl">信息编号</div>
+    <div class="grid_3 val"><input type="text" id="BillNo" name="BillNo" data-bind="value:form.BillNo,readOnly:true" class="z-txt readonly" /></div>
+    <div class="grid_1 lbl">道路名称</div>
+    <div class="grid_3 val"><input type="text" id="Address" name="Address" data-bind="value:form.Address" class="z-txt " /></div>
+    <div class="grid_1 lbl">单位名称</div>
+    <div class="grid_3 val"><input type="text" id="Name" name="Name" data-bind="value:form.Name" class="z-txt " /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl">证书是否发放</div>
+    <div class="grid_3 val"><input type="text" data-bind="comboboxValue:form.Certificate,datasource:dataSource.Certificate,comboboxReadOnly:readonly" class="z-txt easyui-combobox" /></div>
+    <div class="grid_1 lbl">证书有效期</div>
+    <div class="grid_3 val"><input type="text" id="CertificateyTime" name="CertificateyTime" data-bind="value:form.CertificateyTime" class="z-txt " /></div>
+    <div class="grid_1 lbl">所属行业</div>
+    <div class="grid_3 val"><input type="text" id="Type" name="Type" data-bind="value:form.Type" class="z-txt " /></div>
+
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl ">备注(联系方式)</div>
+    <div class="grid_3 val"><input type="text" id="Remark" name="Remark" data-bind="value:form.Remark" class="z-txt" /></div>
+    <div class="grid_1 lbl">单位标识码</div>
+    <div class="grid_3 val"><input type="text" id="IdentificationCode" name="IdentificationCode" data-bind="value:form.IdentificationCode" class="z-txt" /></div>
+    <div class="clear"></div>
+
+

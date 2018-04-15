@@ -1,0 +1,329 @@
+﻿@{
+    ViewBag.Title = "title";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var Cols = new Zephyr.Models.sys_roleMenuColumnMapService().GetCurrentUserMenuColumns();
+}
+
+@section scripts{
+
+    <script src="~/Areas/Mms/ViewModels/mms.com.js"></script>
+    <script src="~/Areas/Mms/ViewModels/mms.viewModel.search.js"></script>
+    <script type="text/javascript" src="~/Content/arcgis/jsapi_vsdoc12_v38.js"></script>
+    <link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/dijit/themes/tundra/tundra.css" />
+    <link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/esri/css/esri.css" />
+    <script type="text/javascript"
+        src="http://10.144.1.21/arcgis/library/3.17/jsapi/init.js"></script>
+    <script type="text/javascript">
+
+       
+        var lastid='0';
+        var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model));
+        var viewModel = function(){
+            var self = this;
+            mms.viewModel.search.apply(this,arguments);
+            com.Category = utils.fnValueToText(data.dataSource.Category);
+            com.AdministrativeArea = utils.fnValueToText(data.dataSource.AdministrativeArea);
+            com.Material = utils.fnValueToText(data.dataSource.Material);
+            com.LiningMaterial = utils.fnValueToText(data.dataSource.LiningMaterial);
+            com.PressureType = utils.fnValueToText(data.dataSource.PressureType);
+            com.FacilityStatus = utils.fnValueToText(data.dataSource.FacilityStatus);
+
+        }
+        ko.bindingViewModel(new viewModel(data));
+      
+     
+      function adds(rows)
+        {
+          
+          var Address;
+          var IdentificationCode;
+          var Region;
+          var Type;
+          var ReportedArea;
+          var  ActualArea;
+          var  MaximumWaterDepth;
+          var Watertime;
+          var WaterLong;
+          var  WaterCause;
+          var InfluenceDegree;
+          var RemediationMeasures;
+          var PlannedCompletionTime;
+          var PlanInvestment;
+          var OwnershipUnit;
+          var FacilityStatus;
+
+          var map, dialog;
+          require([
+            "esri/map", "esri/layers/FeatureLayer",
+            "esri/symbols/SimpleFillSymbol", "esri/symbols/SimpleLineSymbol",
+            "esri/renderers/SimpleRenderer", "esri/graphic", "esri/lang",
+            "esri/Color", "dojo/number", "dojo/dom-style","esri/symbols/SimpleMarkerSymbol",
+            "dijit/TooltipDialog", "dijit/popup", "dojo/domReady!"
+          ], function (
+            Map, FeatureLayer,
+            SimpleFillSymbol, SimpleLineSymbol,
+            SimpleRenderer, Graphic, esriLang,
+            Color, number, domStyle,SimpleMarkerSymbol,
+            TooltipDialog, dijitPopup
+          ) {
+              MyMapDiv.innerHTML="";
+              map = new esri.Map("MyMapDiv");
+            
+              var myTiledMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州底图1124/MapServer");
+              map.addLayer(myTiledMapServiceLayer);
+
+              var southCarolinaCounties = new esri.layers.FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/易淹易涝区域/FeatureServer/0", {
+                  mode: FeatureLayer.MODE_SNAPSHOT,
+                  outFields: ["序号","地区", "位置","identifier","type", "reportarea","actualarea","depth","date","hours","reason","effect","measure","plantime","invest"]
+              });
+
+              //Address=1;
+              //southCarolinaCounties.setDefinitionExpression("序号 ="+"'"+Address+"'");
+             
+              var sms = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 20,
+                                new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,
+                                        new Color([255, 0, 0]), 1),
+                                new Color([0, 255, 0, 0.25]));
+              map.addLayer(southCarolinaCounties);
+              map.infoWindow.resize(245, 125);
+
+              var widget = dijit.byId("tooltipDialog");
+              if (widget) {
+                  widget.destroy();
+              }
+
+              dialog = new TooltipDialog({
+                  id: "tooltipDialog",
+                  style: "position: absolute; width: 250px; font: normal normal normal 10pt Helvetica;z-index:100"
+              });
+              dialog.startup();
+
+              var highlightSymbol = new SimpleFillSymbol(
+                SimpleFillSymbol.STYLE_SOLID,
+                new SimpleLineSymbol(
+                  SimpleLineSymbol.STYLE_SOLID,
+                  new Color([255, 0, 0]), 3
+                ),
+                new Color([125, 125, 125, 0.35])
+              );
+
+              ////close the dialog when the mouse leaves the highlight graphic
+              map.on("load", function () {
+                  map.graphics.enableMouseEvents();
+                  map.graphics.on("mouse-out", closeDialog);
+
+              });
+
+              ////listen for when the onMouseOver event fires on the countiesGraphicsLayer
+              ////when fired, create a new graphic with the geometry from the event.graphic and add it to the maps graphics layer
+              southCarolinaCounties.on("mouse-over", function (evt) {
+                  //evt.graphic.attributes.LineWt="88";
+                  var find_id=0;
+                  var id=evt.graphic.attributes.序号;
+                  for (var i = 0; i < rows.length; i++) {
+
+                      if(rows[i]["BillNo"]==id)
+                      {
+                          IdentificationCode=rows[i]["IdentificationCod"];
+                          Region=rows[i]["Region"];
+                          Address=rows[i]["Address"];
+                          Type=rows[i]["Type"];
+                          ReportedArea=rows[i]["ReportedArea"];
+                          ActualArea=rows[i]["ActualArea"];
+                          MaximumWaterDepth=rows[i]["MaximumWaterDepth"];
+                          Watertime=rows[i]["Watertime"];
+                          WaterLong=rows[i]["WaterLong"];
+                          WaterCause=rows[i]["WaterCause"];
+                          InfluenceDegree=rows[i]["InfluenceDegree"];
+                     
+                          RemediationMeasures=rows[i]["RemediationMeasures"];
+                          PlannedCompletionTime=rows[i]["PlannedCompletionTime"];
+                          PlanInvestment=rows[i]["PlanInvestment"];
+                          //OwnershipUnit=rows[i]["OwnershipUnit"];
+                          //FacilityStatus=utils.CovValueToText(rows[i]['FacilityStatus'],data.dataSource.FacilityStatus);
+                          find_id=1;
+                          break;
+                      }
+
+                  }
+
+                  if(find_id==1)
+                  {
+                      evt.graphic.attributes.地区=Region;
+                      evt.graphic.attributes.位置=Address;
+                      evt.graphic.attributes.identifier=IdentificationCode;
+                      evt.graphic.attributes.type=Type;
+                      evt.graphic.attributes.reportarea=ReportedArea;
+                      evt.graphic.attributes.actualarea=ActualArea;
+                      evt.graphic.attributes.depth=MaximumWaterDepth;
+                      evt.graphic.attributes.date=Watertime;
+                      evt.graphic.attributes.hours=WaterLong;
+                      evt.graphic.attributes.reason=WaterCause;
+                      evt.graphic.attributes.effect=InfluenceDegree;
+                      evt.graphic.attributes.measure=RemediationMeasures;
+                      evt.graphic.attributes.plantime=PlannedCompletionTime;
+                      evt.graphic.attributes.invest=PlanInvestment;
+                      //evt.graphic.attributes.OwnerUnit=OwnershipUnit;
+                      //evt.graphic.attributes.FacilitySt=FacilityStatus;
+                  }else
+                  {
+
+                     
+                      return;
+                  }
+
+
+                  var t = "<b>${易淹易涝}</b><hr><br>"
+                    + "<b>地区: </b>${地区}<br>"
+                    + "<b>位置: </b>${位置}<br>"
+                    + "<b>标识码: </b>${identifier}<br>"
+                    + "<b>类型: </b>${type}<br>"
+                    + "<b>上报面积/ha: </b>${reportarea}<br>"
+                    + "<b>实际面积/ha: </b>${actualarea}<br>"
+                    + "<b>最大积水深度/mm: </b>${depth}<br>"
+                    + "<b>积水时间: </b>${date}<br>"
+                    + "<b>积水时长: </b>${hours}<br>"
+                    + "<b>积水原因: </b>${reason}<br>"
+                    + "<b>影响程度: </b>${effect}<br>"
+                    + "<b>整治措施: </b>${measure}<br>"
+                    + "<b>计划整治完成时间: </b>${plantime}<br>"
+                    + "<b>计划整治投资/万元: </b>${invest}<br>"
+                  
+
+                  var content = esriLang.substitute(evt.graphic.attributes, t);
+                  var highlightGraphic = new Graphic(evt.graphic.geometry, highlightSymbol);
+                  map.graphics.add(highlightGraphic);
+
+                  dialog.setContent(content);
+
+                  domStyle.set(dialog.domNode, "opacity", 0.85);
+                  dijitPopup.open({
+                      popup: dialog,
+                      x: evt.pageX,
+                      y: evt.pageY
+                  });
+              });
+
+              function closeDialog() {
+                  map.graphics.clear();
+
+                  dijitPopup.close(dialog);
+                
+              }
+
+          });
+        }
+
+
+        function doFind() {
+            var rows = $("#tbgrid").datagrid("getRows");
+            var pp = $('#testss').tabs('getSelected');
+            if(pp.panel('options').title!="地图查看")
+            {
+                //MyMapDiv.innerHTML="";
+            }else
+            {
+                if(lastid!=rows[rows.length-1]['BillNo'])
+                {
+                    lastid=rows[rows.length-1]['BillNo'];
+                    adds(rows);
+
+                }else{
+
+                    return;
+                }
+
+            }
+
+          
+        }
+
+        function Pre_searchClick()
+        {
+            var address_name=$("#address_name").val();
+          
+            if(address_name.length>0)
+            {
+                this.searchClick();
+            }else
+            {
+                return com.message('warning', "请先输入道路名称再查询");
+
+            }
+
+        }
+
+
+       
+
+
+    </script>
+}
+
+@Html.RenderToolbar()
+
+
+
+<div id="condition" class="container_12" style="position:relative;">
+    <div class="grid_1 lbl">标识码</div>
+    <div class="grid_2 val"><input type="text" data-bind="value:form.IdentificationCode" class="z-txt" /></div>
+    <div class="grid_1 lbl">道路名称</div>
+    <div class="grid_2 val"><input type="text" data-bind="value:form.Address" required="required" class="z-txt" id="address_name" name="address_name"/></div>
+    <div class="grid_1 lbl">所在区域</div>
+    <div class="grid_2 val"><input type="text" data-bind="comboboxValue:form.AdministrativeArea,datasource:dataSource.AdministrativeArea" class="easyui-combobox z-txt" data-options="showblank:true" /></div>
+   
+    <div class="clear"></div>
+
+    <div class="grid_1 lbl">按权属单位</div>
+    <div class="grid_2 val"><input type="text" data-bind="value:form.OwnershipUnit" required="required" class="z-txt" /></div>
+    
+    <div class="clear"></div>
+    
+
+    <div class="prefix_9" style="position:absolute;top:5px;height:0;">
+        <a id="a_search" href="#" class="buttonHuge button-blue" data-bind="click:searchClick" style="margin:0 15px;">查询</a>
+        <a id="a_reset" href="#" class="buttonHuge button-blue" data-bind="click:clearClick">清空</a>
+    </div>
+</div>
+
+
+
+
+<div id="testss" class="easyui-tabs" data-bind="click:doFind">
+    <div title="详细信息">
+        <div style="position: absolute; height: 100%; overflow-y:auto ;overflow-x:hidden">
+            <table id="tbgrid" data-bind="datagrid:grid" style="scrollbar-darkshadow-color: #f00; height: 100%">
+                <thead>
+                    <tr>
+                        <th field="BillNo" hidden="hidden" sortable="true" align="center" width="90">流水号</th>
+                        <th field="Address" @Html.HideColumn(Cols, "Address") sortable="true" align="center" width="100">所在道路名称</th>
+                        <th field="AdministrativeArea" @Html.HideColumn(Cols, "AdministrativeArea") sortable="true" align="center" width="100" formatter="com.AdministrativeArea" hidden="hidden">所在区域</th>
+                        <th field="IdentificationCode" @Html.HideColumn(Cols, "IdentificationCode") sortable="true" align="center" width="100">易淹易涝标识码</th>
+                        <th field="Region" @Html.HideColumn(Cols, "Region") sortable="true" align="center" width="100">地区</th>
+                         <th field="Type" @Html.HideColumn(Cols, "Type") sortable="true" align="center" width="100">类型</th>
+                        <th field="ReportedArea" @Html.HideColumn(Cols, "ReportedArea") sortable="true" align="center" width="100">上报面积/ha</th>
+                        <th field="ActualArea" @Html.HideColumn(Cols, "ActualArea") sortable="true" align="center" width="100">实际面积/ha</th>
+                        <th field="MaximumWaterDepth" @Html.HideColumn(Cols, "MaximumWaterDepth") sortable="true" align="center" width="100">最大积水深度/mm</th>
+                        <th field="Watertime" @Html.HideColumn(Cols, "Watertime") sortable="true" align="center" width="100">积水时间</th>
+                        <th field="WaterLong" @Html.HideColumn(Cols, "WaterLong") sortable="true" align="center" width="100">积水时长/h</th>
+                        <th field="WaterCause" @Html.HideColumn(Cols, "WaterCause") sortable="true" align="center" width="100">积水原因</th>
+                        <th field="InfluenceDegree" @Html.HideColumn(Cols, "InfluenceDegree") sortable="true" align="center" width="100">影响程度</th>
+                        <th field="RemediationMeasures" @Html.HideColumn(Cols, "RemediationMeasures") sortable="true" align="center" width="100">整治措施</th>
+                        <th field="PlannedCompletionTime" @Html.HideColumn(Cols, "PlannedCompletionTime") sortable="true" align="center" width="100">实施年度</th>
+                        <th field="PlanInvestment" @Html.HideColumn(Cols, "PlanInvestment") sortable="true" align="center" width="100">投资估算/万元</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div title="地图查看" id="mapwin">
+        <div style="height: 100%;width:100%; overflow-y: hidden; overflow-x: hidden">
+            <div id="MyMapDiv" class="MapClass" style="height: 800px"></div>
+        </div>
+    </div>
+</div>
+
+
+

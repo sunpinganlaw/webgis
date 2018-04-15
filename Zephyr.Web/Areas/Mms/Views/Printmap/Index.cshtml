@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>  
+<html>  
+<head>  
+    @*<meta charset="utf-8"/>  
+    <meta content="" name="description">  
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  
+    <meta name="renderer" content="webkit">*@  
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>地图打印</title>  
+
+    <style>  
+        html,body{  
+            margin: 0;  
+            width: 100%;  
+            height: 100%;;  
+        }  
+        #map{  
+            width: 100%;  
+            height: 100%;;  
+        }  
+        #PrinterDiv{  
+            position: absolute;  
+            top: 0px;  
+            right: 0px;;  
+            width: 200px;  
+            height: 300px;  
+            background-color: #fff;  
+            border: 1px solid #ddd;  
+            text-align: center;  
+            line-height: 30px;  
+            padding: 10px;;  
+        }  
+    </style>  
+</head>  
+  
+<body>  
+    <div id="map" data-dojo-type="dijit.layout.ContentPane"></div>  
+  
+    <div id="PrinterDiv" >
+        <span style="width: 100%;font-weight: bold;text-align: left">设置打印DPI：</span>
+        <input id="dpi" style="width: 100%" value="96">
+        <button id="print">打印</button>
+        <div>测量工具</div>
+        <div id="measurementDiv"></div>
+    </div>  
+</body>  
+<link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/dijit/themes/tundra/tundra.css" />
+<link rel="stylesheet" type="text/css"
+      href="http://10.144.1.21/arcgis/library/3.17/jsapi/esri/css/esri.css" />
+<script type="text/javascript"
+        src="http://10.144.1.21/arcgis/library/3.17/jsapi/init.js"></script>
+<script type="text/javascript">
+
+    dojo.require("dijit.layout.BorderContainer");
+    dojo.require("dijit.layout.ContentPane");
+    dojo.require("esri.map");
+    dojo.require("esri.dijit.Measurement");
+    dojo.require("esri.dijit.Scalebar");
+    dojo.require("esri.layers.FeatureLayer");
+    dojo.require( "esri/dijit/Print");
+    dojo.require("esri/tasks/PrintTask");
+           dojo.require("esri/tasks/PrintParameters");
+           dojo.require("esri/tasks/PrintTemplate");
+    var map;
+    var measurement;
+
+
+
+
+    function init() {
+
+        map = new esri.Map("map");
+        esri.config.defaults.geometryService = new esri.tasks.GeometryService("http://10.144.1.21:6080/arcgis/rest/services/Utilities/Geometry/GeometryServer");
+
+        var MyTiledMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/backgroundmap/MapServer");
+        var MyAdministrativeMapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://10.144.1.21:6080/arcgis/rest/services/徐州市行政区域/MapServer");
+
+        var inspectionfeatureLayer = new esri.layers.FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/featuremap/FeatureServer/2");
+        var dischargefeatureLayer = new esri.layers.FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/featuremap/FeatureServer/1");
+        var rainwaterfeatureLayer = new esri.layers.FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/featuremap/FeatureServer/4");
+        var groovefeatureLayer = new esri.layers.FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/featuremap/FeatureServer/6");
+        var pipefeatureLayer = new esri.layers.FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/featuremap/FeatureServer/5");
+        var getefeatureLayer = new esri.layers.FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/featuremap/FeatureServer/3");
+        var pumpfeatureLayer = new esri.layers.FeatureLayer("http://10.144.1.21:6080/arcgis/rest/services/featuremap/FeatureServer/0");
+
+        map.addLayer(MyTiledMapServiceLayer);
+        map.addLayer(MyAdministrativeMapServiceLayer);
+        map.addLayer(inspectionfeatureLayer);
+        map.addLayer(dischargefeatureLayer);
+        map.addLayer(rainwaterfeatureLayer);
+        map.addLayer(groovefeatureLayer);
+        map.addLayer(pipefeatureLayer);
+        map.addLayer(getefeatureLayer);
+        map.addLayer(pumpfeatureLayer);
+
+        dojo.connect(map, 'onLoad', function (map) {
+            initToolbar(map);
+        });
+
+
+        var button = document.getElementById("print");
+        button.onclick = function () {
+            var printTask = new esri.tasks.PrintTask("http://10.144.1.21:6080/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task");
+            var template = new esri.tasks.PrintTemplate();
+            var dpi = document.getElementById("dpi").value;
+            template.exportOptions = {
+                width: 800,
+                height: 600,
+                dpi: Number(dpi)
+            };
+            template.format = "PDF";
+            template.layout = "MAP_ONLY";
+            template.preserveScale = false;
+            var params = new esri.tasks.PrintParameters();
+            params.map = map;
+            params.template = template;
+            printTask.execute(params, function (evt) {
+                window.open(evt.url, "_blank");
+            });
+        }
+
+
+
+
+    }
+
+    function initToolbar(mymap) {
+
+        var pms = new esri.symbol.PictureMarkerSymbol("/images/InspectionWell.png", 24, 24);
+        pms.setOffset(9, 11);
+        var sls = new esri.symbol.SimpleLineSymbol(
+            esri.symbol.SimpleLineSymbol.STYLE_DOT,
+            new dojo.Color([255, 0, 0, .55]),
+            4
+        );
+
+        if (dijit.byId("measurementDiv")) {
+            //alert('measurementDiv');
+            dijit.byId("measurementDiv").destroy();
+            measurement = new esri.dijit.Measurement({
+                map: mymap,
+                lineSymbol: sls,
+                pointSymbol: pms
+            }, dojo.byId('measurementDiv'));
+            measurement.startup();
+            measurement.setTool("area", true);
+
+        } else {
+
+            measurement = new esri.dijit.Measurement({
+                map: mymap,
+                lineSymbol: sls,
+                pointSymbol: pms
+            }, dojo.byId('measurementDiv'));
+            measurement.startup();
+            measurement.setTool("area", true);
+
+        }
+
+    }
+    dojo.ready(init);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
+
+   
+
+
+</script>
+  
+</html>  
